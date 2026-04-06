@@ -1,0 +1,80 @@
+############################################
+# BUILD FILES
+############################################
+
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# Compiled classes
+*.class
+
+############################################
+# LOGS
+############################################
+*.log
+
+############################################
+# SPRING BOOT (SECRETS ⚠️)
+############################################
+application.properties
+application.yml
+
+# Allow sample config
+!application-example.properties
+
+############################################
+# IDE FILES
+############################################
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# VS Code
+.vscode/
+
+############################################
+# NETBEANS
+############################################
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+############################################
+# OS FILES
+############################################
+.DS_Store
+Thumbs.db
+
+############################################
+# TEMP FILES
+############################################
+*.tmp
+*.swp
+*.bak
+
+############################################
+# JAR FILES (OPTIONAL)
+############################################
+*.jar
+*.war
+*.ear
+.env
+application.properties

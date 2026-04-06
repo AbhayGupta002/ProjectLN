@@ -1,0 +1,59 @@
+.tour-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:
+      linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+      url("/Users/abhaygupta/Downloads/ProjectLN/frontend/public/images/login-bg.png");
+     background-size: cover;
+  }
+  
+  .tour-form {
+    background: rgba(255, 255, 255, 0.18);
+    padding: 30px;
+    border-radius: 16px;
+    width: 360px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(2px);
+  
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .tour-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .tour-form input,
+  .tour-form select,
+  .tour-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #cccccccd;
+  }
+  
+  .tour-form textarea {
+    resize: none;
+    height: 80px;
+  }
+  
+  .tour-form button {
+    width: 100%;
+    padding: 12px;
+    background: #80fff7;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  
+  .tour-form button:hover {
+    opacity: 0.9;
+  }
+  

@@ -1,0 +1,174 @@
+.admin-login-page {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  background:
+    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+    url("/Users/abhaygupta/Downloads/ProjectLN/frontend/public/images/login-bg.png"); /* FIXED PATH */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 🌧️ Rain */
+.rain {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  z-index: 3; /* ABOVE card for overlay */
+  pointer-events: none;
+}
+
+.drop {
+  position: absolute;
+  top: -10px;
+  width: 2px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(110vh); opacity: 0; }
+}
+
+/* ⚡ Lightning flash */
+.admin-login-page::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  animation: lightning 6s infinite;
+  z-index: 4;
+}
+
+@keyframes lightning {
+  0%, 95%, 100% { opacity: 0; }
+  96% { opacity: 0.4; }
+  97% { opacity: 0; }
+  98% { opacity: 0.6; }
+  99% { opacity: 0; }
+}
+
+/* 🧊 Glass card */
+.glass-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(1px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  padding: 40px 30px;
+  width: 350px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 🌊 Water reflection effect */
+.glass-card::after {
+  content: "";
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.15),
+    transparent
+  );
+  transform: scaleY(-1);
+  opacity: 0.4;
+  filter: blur(3px);
+}
+
+/* Title */
+.login-title {
+  color: #fff;
+  margin-bottom: 25px;
+  font-size: 28px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 15px rgba(0,0,0,0.6);
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-form input {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: rgba(255,255,255,0.25);
+  color: #000;
+  transition: all 0.3s ease;
+  width: 300px;
+}
+
+.login-form input::placeholder {
+  color: #eee;
+}
+
+.login-form input:focus {
+  background: rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px rgba(255,255,255,0.6);
+  transform: translateY(-2px);
+}
+
+/* Password toggle */
+.password-wrapper { position: relative; }
+
+.toggle-password {
+  position: absolute;
+  right: 0px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Button */
+.login-form button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #1abc9c;
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-form button:hover {
+  background: #16a085;
+  transform: translateY(-2px);
+}
+
+/* Error */
+.error {
+  color: #ff6b6b;
+  font-size: 14px;
+  text-align: center;
+}

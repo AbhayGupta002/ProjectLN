@@ -1,0 +1,97 @@
+.navbar-container {
+border-bottom: 1px solid #e5e7eb;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 14px 24px;
+position: sticky;
+top: 0;
+z-index: 1000;
+}
+
+
+/* Logo */
+.navbar-logo {
+font-size: 22px;
+font-weight: 700;
+color: #111827;
+cursor: pointer;
+}
+
+
+/* Nav Links */
+.navbar-links {
+display: flex;
+gap: 24px;
+align-items: center;
+}
+
+
+.navbar-links a {
+font-size: 16px;
+color: #4b5563;
+text-decoration: none;
+font-weight: 500;
+transition: 0.2s;
+}
+
+
+.navbar-links a:hover {
+color: #111827;
+}
+
+
+/* Buttons */
+.navbar-button {
+padding: 8px 18px;
+border-radius: 8px;
+font-size: 15px;
+font-weight: 600;
+cursor: pointer;
+transition: 0.25s ease;
+border: 1px solid transparent;
+}
+
+
+.navbar-btn-login {
+background: transparent;
+border-color: #d1d5db;
+color: #374151;
+}
+
+
+.navbar-btn-login:hover {
+border-color: #9ca3af;
+background: #f3f4f6;
+}
+
+
+.navbar-btn-signup {
+background: #4f46e5;
+color: white;
+}
+
+
+.navbar-btn-signup:hover {
+background: #4338ca;
+}
+
+
+/* Mobile Menu */
+.navbar-menu-icon {
+display: none;
+font-size: 28px;
+cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
+.navbar-links {
+display: none;
+}
+
+
+.navbar-menu-icon {
+display: block;
+}
+}

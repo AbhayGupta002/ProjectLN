@@ -1,0 +1,115 @@
+/* ===== ADMIN DASHBOARD CONTAINER ===== */
+.admin-dashboard {
+  display: flex;
+  position: absolute;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+}
+
+/* ===== SIDEBAR ===== */
+.admin-dashboard .admin-sidebar {
+  width: 250px;
+  background: #708090;
+  /*background: linear-gradient(140deg, #1e293b, red);*/
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.admin-dashboard .admin-sidebar h2 {
+  margin-bottom: 20px;
+}
+
+/* Sidebar Buttons */
+.admin-dashboard .admin-sidebar button {
+  margin: 10px 0;
+  padding: 10px;
+  background: #374151;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.admin-dashboard .admin-sidebar button:hover {
+  background: #4b5563;
+}
+
+/* Logout Button */
+.admin-dashboard .admin-logout {
+  margin-top: auto;
+  background: #ef4444 !important;
+}
+
+/* ===== MAIN CONTENT ===== */
+.admin-dashboard .admin-main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* ===== SEARCH BOX ===== */
+.admin-dashboard .admin-search-box {
+  margin-bottom: 20px;
+}
+
+.admin-dashboard .admin-search-box input {
+  padding: 10px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* ===== TABLE CONTAINER ===== */
+.admin-dashboard .admin-table-container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* ===== TABLE ===== */
+.admin-dashboard table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-dashboard th,
+.admin-dashboard td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.admin-dashboard th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.admin-dashboard .admin-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  margin-right: 5px;
+}
+
+.admin-dashboard .approve-btn {
+  background: #22c55e;
+}
+
+.admin-dashboard .reject-btn {
+  background: linear-gradient(140deg, #1e293b, blue);
+}
+
+.admin-dashboard .admin-btn:hover {
+  opacity: 0.85;
+}
+
+.admin-modal-box h3 {
+  color: #22c55e;
+}

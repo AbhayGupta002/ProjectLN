@@ -1,0 +1,65 @@
+package com.example.personalassistant.service;
+
+import com.example.personalassistant.mongo.ChatLog;
+import com.example.personalassistant.mongoRepository.ChatLogRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class MongoService {
+
+    @Autowired
+    private ChatLogRepository repo;
+
+    public void saveChat(
+            String sessionId,
+            String email,
+            String userPrompt,
+            String aiResponse,
+            String intent
+    ) {
+        ChatLog log = new ChatLog();
+
+        log.setSessionId(sessionId);
+        log.setEmail(email);
+        log.setUserPrompt(userPrompt);
+        log.setAiResponse(aiResponse);
+        log.setIntent(intent);
+        log.setCreatedAt(LocalDateTime.now());
+
+        repo.save(log);
+    }
+
+    public void saveAiChat(String userPrompt) {
+        try {
+            ChatLog log = new ChatLog();
+
+            log.setUserPrompt(userPrompt+":AI");
+            log.setCreatedAt(LocalDateTime.now());
+
+            repo.save(log); // ✅ save object, not string
+
+        } catch (Exception e) {
+            e.printStackTrace(); // or use logger
+        }
+    }
+
+
+    public List<String> getUserPrompt(){
+        try{
+            List<ChatLog> logs = repo.findAllByOrderByCreatedAtDesc();
+
+            return logs.stream()
+                    .map(ChatLog::getUserPrompt)
+                    .filter(prompt -> prompt != null && !prompt.isBlank())
+                    .toList();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of(); // return empty list if error
+        }
+    }
+}
