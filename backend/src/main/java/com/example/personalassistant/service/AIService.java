@@ -59,12 +59,10 @@ public class AIService {
             String sessionId,
             String email) {
 
-        // ✅ SAFE ROLE
         String safeRole = (role == null || role.isBlank())
                 ? "GUEST"
                 : role.toUpperCase();
 
-        // ✅ SAFE SESSION
         if (sessionId == null || sessionId.isBlank()) {
             sessionId = UUID.randomUUID().toString();
         }
@@ -74,13 +72,10 @@ public class AIService {
 
         try {
 
-            // 🧠 MEMORY
             String context = memoryService.getContext(sessionId);
 
-            // 🎭 ROLE PROMPT
             String systemPrompt = getRolePrompt(safeRole);
 
-            // 🔥 FINAL PROMPT
             String prompt = systemPrompt + """
 
 Today's date: %s
@@ -91,7 +86,6 @@ Conversation so far:
 User: %s
 """.formatted(todayDate, context, userPrompt);
 
-            // 🔗 LLM CALL
             Map<String, Object> body = new HashMap<>();
             body.put("model", "llama3");
             body.put("prompt", prompt);
@@ -111,7 +105,6 @@ User: %s
                     .replace("```", "")
                     .trim();
 
-            // 🛡 SAFE JSON PARSE
             int start = aiText.indexOf("{");
             int end = aiText.lastIndexOf("}") + 1;
 
@@ -124,7 +117,6 @@ User: %s
             AIParsedResponse parsed =
                     objectMapper.readValue(aiText, AIParsedResponse.class);
 
-            // 🔧 DEFAULTS
             if (parsed.getIntent() == null || parsed.getIntent().isBlank()) {
                 parsed.setIntent("CHAT");
             }
@@ -133,7 +125,6 @@ User: %s
                 parsed.setMessage("I'm here to help you 😊");
             }
 
-            // 💾 SAVE MEMORY
             memoryService.save(sessionId, userPrompt, parsed.getMessage());
             mongoService.saveChat(
                     sessionId,
@@ -143,7 +134,6 @@ User: %s
                     parsed.getIntent()
             );
 
-            // 🚀 ROUTER
             Map<String, Function<AIParsedResponse, ResponseEntity<?>>> router =
                     new HashMap<>();
 
