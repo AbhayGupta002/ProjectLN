@@ -211,8 +211,6 @@
   50% { transform: translateY(-10px); }
 }
 
-
-
 /* LIGHT MODE */
 .light .ai-modal {
   background: #ffffff;
@@ -256,7 +254,6 @@
 .ai-actions button:hover {
   transform: scale(1.2);
 }
-
 
 /* MINIMIZED CHAT BUBBLE */
 .ai-assistant.minimized {
@@ -350,8 +347,6 @@
   }
 }
 
-
-{/*ai chat */}
 /* QUICK ACTIONS */
 .quick-actions {
   display: flex;
@@ -411,12 +406,98 @@
   cursor: pointer;
 }
 
-/* TEXTAREA */
-.ai-footer textarea {
-  flex: 1;
-  resize: none;
-  padding: 10px;
-  border-radius: 10px;
+/* TRAVEL AGENT LAYOUT & CARDS */
+.travel-modes-picker {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.travel-modes-picker button {
+  background-color: #2563eb;
+  color: white;
   border: none;
-  outline: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.travel-modes-picker button:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.agent-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  max-width: 100%;
+}
+
+.agent-item-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.dark .agent-item-card {
+  background: #1e1e2f;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.agent-item-card.selected {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px #10b981;
+}
+
+.price-tag {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.dark .price-tag {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+}
+
+.select-card-btn {
+  margin-top: 8px;
+  background-color: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.select-card-btn:hover {
+  background-color: #1e293b;
+}
+
+.agent-item-card.selected .select-card-btn {
+  background-color: #10b981;
+  color: white;
 }

@@ -20,7 +20,7 @@
 /* Hero */
 .hero {
   height: 90vh;
-  /*background: url("/Users/abhaygupta/Downloads/ProjectLN/frontend/public/images/Home-img.jpg") center/cover no-repeat;*/
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url("https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1800&q=80") center/cover no-repeat;
   color: white;
   display: flex;
   flex-direction: column;
