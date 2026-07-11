@@ -77,4 +77,9 @@ public class BookingController {
     public ResponseEntity<?> getUserBookings(@RequestParam String email){
         return bookingService.getUserBookings(email);
     }
+
+    @PutMapping("/cancel/{id}")
+    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+        return bookingService.cancelBooking(id);
+    }
 }

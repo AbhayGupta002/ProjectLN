@@ -151,6 +151,24 @@ function Dashboard() {
     }
   };
 
+  const handleCancelHotel = async (id) => {
+    if (window.confirm("Are you sure you want to cancel this hotel stay booking?")) {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.put(`${API_BASE}/api/bookings/cancel/${id}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data?.data?.success || res.data?.success) {
+          alert("Hotel booking cancelled successfully.");
+          if (user?.id) fetchUserAllBookings(user.id, token);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Cancellation failed.");
+      }
+    }
+  };
+
   const getAllTransactions = () => {
     const list = [];
     
@@ -316,12 +334,24 @@ function Dashboard() {
                     {bookings.length === 0 ? <p style={{ color: "#64748b" }}>No hotel bookings found.</p> :
                       bookings.map((b, i) => (
                         <div className="booking-item-card" key={i}>
-                          <div>
-                            <h4>Hotel ID: {b.id || b.hotelId}</h4>
-                            <p style={{ margin: "4px 0", color: "#64748b" }}>Amount Paid: ₹{b.amount || "N/A"}</p>
-                            <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                              Status: <span style={{ color: "#10b981", fontWeight: 600 }}>CONFIRMED</span>
-                            </p>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                            <div>
+                              <h4>{b.hotel?.hotel || b.hotelName || "LuxNes Premium Stay"}</h4>
+                              <p style={{ margin: "4px 0", color: "#64748b" }}>City: {b.hotel?.city || "N/A"} | Price: ₹{b.amount || "N/A"}</p>
+                              <p style={{ margin: "4px 0", color: "#64748b" }}>
+                                Check-in: {b.checkIn ? b.checkIn.split("T")[0] : "N/A"} | Check-out: {b.checkOut ? b.checkOut.split("T")[0] : "N/A"}
+                              </p>
+                              <p style={{ fontSize: "0.85rem" }}>
+                                Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+                                  {b.bookingStatus || "CONFIRMED"}
+                                </span>
+                              </p>
+                            </div>
+                            {b.bookingStatus !== "CANCELLED" && (
+                              <button className="cancel-booking-btn" onClick={() => handleCancelHotel(b.id)}>
+                                Cancel Booking
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))

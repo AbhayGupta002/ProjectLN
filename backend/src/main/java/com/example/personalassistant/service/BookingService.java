@@ -163,7 +163,22 @@ public class BookingService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    public ResponseEntity<Response> cancelBooking(Long id) {
+        Response response = new Response();
+        Booking booking = bookingRepository.findById(id).orElse(null);
+        if (booking == null) {
+            response.setError(new ErrorDetails(HttpStatus.NOT_FOUND, "Booking not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
 
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", true);
+        data.put("message", "Hotel booking cancelled successfully");
+        response.setData(data);
 
+        return ResponseEntity.ok(response);
+    }
 }
 
