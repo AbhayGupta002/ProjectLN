@@ -42,7 +42,6 @@ public class TourBookingController {
         return tourBookingService.cancelTourBooking(bookingId, userId);
     }
 
-    // ❌ Reject booking
     @PutMapping("/reject/{bookingId}")
     public TourBooking rejectBooking(
             @PathVariable Long bookingId) {

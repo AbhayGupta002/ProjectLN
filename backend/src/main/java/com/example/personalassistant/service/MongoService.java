@@ -40,7 +40,7 @@ public class MongoService {
             log.setUserPrompt(userPrompt+":AI");
             log.setCreatedAt(LocalDateTime.now());
 
-            repo.save(log); 
+            repo.save(log); // ✅ save object, not string
 
         } catch (Exception e) {
             e.printStackTrace(); // or use logger

@@ -14,8 +14,8 @@ import com.example.personalassistant.repository.HotelRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.personalassistant.repository.AdminLoginRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Service
@@ -39,7 +39,6 @@ public class AdminService {
 
         Response response = new Response();
 
-        // 🔎 Check if email already exists
         Optional<AdminLogin> existingAdmin =
                 adminLoginRepository.findByEmail(adminDto.getEmail());
 
@@ -52,7 +51,6 @@ public class AdminService {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        // ✅ Create Admin entity
         Admin admin = new Admin();
         admin.setName(adminDto.getName());
         admin.setNumber(adminDto.getNumber());
@@ -60,7 +58,6 @@ public class AdminService {
 
         Admin savedAdmin = adminRepository.save(admin);
 
-        // ✅ Create Login credentials
         AdminLogin credential = new AdminLogin();
         credential.setEmail(adminDto.getEmail());
         credential.setPassword(passwordEncoder.encode(adminDto.getPassword()));

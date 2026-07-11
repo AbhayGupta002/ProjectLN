@@ -55,26 +55,32 @@ public class HotelDashboardService {
 
         Response response = new Response();
 
+        // 1️⃣ Get hotel
         Hotel hotel = hotelRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Hotel not found"));
 
+        // 2️⃣ Total Tours
         int totalTours = tourPackageRepository.countByHotel(hotel);
 
+        // 3️⃣ Bookings
         List<Booking> bookings = bookingRepository.findByHotel(hotel);
         int totalBookings = bookings.size();
 
         List<TourBooking> tourBookings = tourBookingRepository.findByEmail(email);
         int totalTourBookings = tourBookings.size();
 
+        // 4️⃣ Revenue (only confirmed)
         double revenue = bookings.stream()
                 .filter(b -> "CONFIRMED".equals(b.getBookingStatus()))
                 .mapToDouble(b -> Double.parseDouble(hotel.getPrice())) // or b.getAmount()
                 .sum();
 
+        // 5️⃣ Pending
         long pending = bookings.stream()
                 .filter(b -> "PENDING".equals(b.getBookingStatus()))
                 .count();
 
+        // 6️⃣ Response
         Map<String, Object> data = new HashMap<>();
         data.put("totalTours", totalTours);
         data.put("totalBookings", totalBookings);

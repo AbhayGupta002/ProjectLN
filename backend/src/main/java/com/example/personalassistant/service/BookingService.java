@@ -35,6 +35,7 @@ public class BookingService {
 
         Response response = new Response();
 
+        // 1️⃣ Validate user
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             response.setError(new ErrorDetails(
@@ -44,6 +45,7 @@ public class BookingService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
+        // 2️⃣ Validate hotel
         Hotel hotel = hotelRepository.findById(hotelId).orElse(null);
         if (hotel == null) {
             response.setError(new ErrorDetails(
@@ -52,7 +54,7 @@ public class BookingService {
             ));
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-
+        // 🚨 Check if booking already exists
         boolean alreadyBooked = bookingRepository.existsByUserAndHotel(user, hotel);
 
         if (alreadyBooked) {
@@ -64,10 +66,12 @@ public class BookingService {
         }
         try {
 
+            // 3️⃣ Create booking
             Booking booking = new Booking();
             booking.setUser(user);
             booking.setHotel(hotel);
 
+            // 4️⃣ Required fields (from entity)
             LocalDateTime checkIn = LocalDateTime.now();
             LocalDateTime checkOut = checkIn.plusDays(1); // example: 1 night stay
 
@@ -117,6 +121,7 @@ public class BookingService {
 
         Response response = new Response();
 
+        // 🔍 Get hotel
         Hotel hotel = hotelRepository.findByEmail(email).orElse(null);
 
         if (hotel == null) {
@@ -127,12 +132,14 @@ public class BookingService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
+        // 📦 Fetch bookings (FIXED)
         List<Booking> bookings =
                 bookingRepository.findByHotelId(hotel.getId());
 
         System.out.println("Hotel ID: " + hotel.getId());
         System.out.println("Bookings found: " + bookings.size());
 
+        // 📊 Prepare response
         Map<String, Object> data = new HashMap<>();
         data.put("hotelName", hotel.getHotel());
         data.put("hotelId", hotel.getId());
