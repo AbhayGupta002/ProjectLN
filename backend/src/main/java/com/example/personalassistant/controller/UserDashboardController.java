@@ -10,6 +10,8 @@ import com.example.personalassistant.service.UserService;
 import com.example.personalassistant.service.BookingService;
 import com.example.personalassistant.service.UserDashboardService;
 import com.example.personalassistant.service.HotelDashboardService;
+import com.example.personalassistant.repository.HotelRepository;
+import com.example.personalassistant.enums.AccountEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -17,6 +19,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/dashboard")
 public class UserDashboardController {
+
+    @Autowired
+    private HotelRepository hotelRepository;
 
     @Autowired
     private UserService userService;
@@ -95,6 +100,11 @@ public class UserDashboardController {
         return hotelDashboardService.searchTourByLocation(location);
     }
 
-
-//    record DashboardStats(int totalBookings, int totalHotels) { }
+    @GetMapping("/search-hotels")
+    public ResponseEntity<?> searchHotels(@RequestParam(required = false, defaultValue = "") String query) {
+        if (query.trim().isEmpty()) {
+            return ResponseEntity.ok(hotelRepository.findByAccountEnum(AccountEnum.ACTIVE));
+        }
+        return ResponseEntity.ok(hotelRepository.searchHotels(query.trim()));
+    }
 }

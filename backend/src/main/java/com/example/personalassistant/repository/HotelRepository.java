@@ -48,13 +48,14 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
             @Param("city") String city
     );
 
-//    @PublicAPi
-@Query(value = """
-    SELECT * FROM hotels
-    WHERE status = 'ACTIVE'
-    ORDER BY CAST(price AS UNSIGNED) DESC
-    LIMIT 3
-    """, nativeQuery = true)
-List<Hotel> findTopHotels();
+    @Query(value = """
+        SELECT * FROM hotels
+        WHERE status = 'ACTIVE'
+        ORDER BY CAST(price AS UNSIGNED) DESC
+        LIMIT 3
+        """, nativeQuery = true)
+    List<Hotel> findTopHotels();
 
+    @Query("SELECT h FROM Hotel h WHERE h.accountEnum = com.example.personalassistant.enums.AccountEnum.ACTIVE AND (LOWER(h.hotel) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(h.city) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(h.email) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Hotel> searchHotels(@Param("query") String query);
 }

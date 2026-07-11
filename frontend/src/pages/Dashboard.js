@@ -33,6 +33,10 @@ function Dashboard() {
   
   // Bookings list state
   const [bookings, setBookings] = useState([]); // hotels
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchingHotels, setSearchingHotels] = useState(false);
+  const [bookingHotelId, setBookingHotelId] = useState(null);
   const [flightBookings, setFlightBookings] = useState([]);
   const [busBookings, setBusBookings] = useState([]);
   const [trainBookings, setTrainBookings] = useState([]);
@@ -63,6 +67,23 @@ function Dashboard() {
 
     fetchProfile();
   }, [navigate]);
+
+  useEffect(() => {
+    if (openPanel === "search-hotels" && searchResults.length === 0) {
+      const fetchInitialHotels = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(`${API_BASE}/api/dashboard/get-active-hotel`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setSearchResults(res.data?.data || res.data || []);
+        } catch (e) {
+          console.error("Error loading active hotels:", e);
+        }
+      };
+      fetchInitialHotels();
+    }
+  }, [openPanel, searchResults.length]);
 
   const fetchUserAllBookings = async (userId, token) => {
     try {
@@ -171,6 +192,41 @@ function Dashboard() {
     }
   };
 
+  const handleSearchHotels = async () => {
+    setSearchingHotels(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE}/api/dashboard/search-hotels?query=${searchQuery}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSearchResults(res.data || []);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to search hotels.");
+    } finally {
+      setSearchingHotels(false);
+    }
+  };
+
+  const handleBookHotel = async (hotelId) => {
+    setBookingHotelId(hotelId);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(`${API_BASE}/api/bookings/bookhotel`, { hotelId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data) {
+        alert("Hotel booked successfully!");
+        if (user?.id) fetchUserAllBookings(user.id, token);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error?.message || "You have already booked this hotel");
+    } finally {
+      setBookingHotelId(null);
+    }
+  };
+
   const getAllTransactions = () => {
     const list = [];
     
@@ -243,6 +299,9 @@ function Dashboard() {
             </li>
             <li className={openPanel === "bookings" ? "active-link" : ""} onClick={() => { setOpenPanel("bookings"); setShowProfilePanel(false); }}>
               <HotelIcon size={18} /> My Bookings
+            </li>
+            <li className={openPanel === "search-hotels" ? "active-link" : ""} onClick={() => { setOpenPanel("search-hotels"); setShowProfilePanel(false); }}>
+              <HotelIcon size={18} /> Search Hotels
             </li>
             <li className={openPanel === "transactions" ? "active-link" : ""} onClick={() => { setOpenPanel("transactions"); setShowProfilePanel(false); }}>
               <History size={18} /> Transactions
@@ -539,6 +598,87 @@ function Dashboard() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {openPanel === "search-hotels" && (
+              <div className="glass-card">
+                <h2>Search & Book Stays</h2>
+                <p style={{ color: "#64748b", marginBottom: 20 }}>Search hotels by name, location (city), or owner email.</p>
+
+                <div className="search-bar-container" style={{ display: "flex", gap: 10, marginBottom: 25 }}>
+                  <input
+                    type="text"
+                    placeholder="Enter hotel name, city, or owner email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ flex: 1, padding: "10px 16px", borderRadius: 10, border: "1px solid #cbd5e1", outline: "none" }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSearchHotels(); }}
+                  />
+                  <button
+                    onClick={handleSearchHotels}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+                      color: "white",
+                      fontWeight: 600,
+                      cursor: "pointer"
+                    }}
+                  >
+                    {searchingHotels ? "Searching..." : "Search"}
+                  </button>
+                </div>
+
+                <div className="hotels-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+                  {searchResults.length === 0 ? (
+                    <p style={{ gridColumn: "1/-1", color: "#64748b", textAlign: "center", padding: 20 }}>No hotels found matching your search query.</p>
+                  ) : (
+                    searchResults.map((hotel) => (
+                      <div
+                        key={hotel.id}
+                        className="hotel-booking-card"
+                        style={{
+                          background: "#ffffff",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 16,
+                          padding: 20,
+                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          gap: 15
+                        }}
+                      >
+                        <div>
+                          <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{hotel.hotel}</h4>
+                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>📍 City: <strong>{hotel.city}</strong></p>
+                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>✉️ Contact: {hotel.email}</p>
+                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>🏨 Rooms Available: {hotel.roomavl || hotel.availableRooms || 5}</p>
+                          <p style={{ fontSize: "1.1rem", fontWeight: 800, color: "#2563eb", marginTop: 10 }}>₹{hotel.price} <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 400 }}>/ night</span></p>
+                        </div>
+                        <button
+                          onClick={() => handleBookHotel(hotel.id)}
+                          disabled={bookingHotelId === hotel.id}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            borderRadius: 10,
+                            border: "none",
+                            background: "linear-gradient(135deg, #10b981, #059669)",
+                            color: "white",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          {bookingHotelId === hotel.id ? "Booking..." : "Book Room"}
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
