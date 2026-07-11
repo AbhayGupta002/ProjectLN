@@ -23,7 +23,7 @@
 //        this.hotelRatingService = hotelRatingService;
 //    }
 //
-//    // ✅ Submit Rating
+//    // Submit Rating
 //    @PostMapping
 //    public ResponseEntity<HotelRatingDto> submitRating(
 //            @RequestBody HotelRatingDto request,
@@ -32,7 +32,7 @@
 //        return hotelRatingService.submitRating(request, token);
 //    }
 //
-//    // ✅ Get All Ratings for Hotel
+//    // Get All Ratings for Hotel
 //    @GetMapping("/hotel/{hotelId}")
 //    public ResponseEntity<List<HotelRatingDto>> getRatingsByHotel(
 //            @PathVariable Long hotelId) {
@@ -40,7 +40,7 @@
 //        return hotelRatingService.getRatingsByHotel(hotelId);
 //    }
 //
-//    // ✅ Get Rating Summary
+//    //  Get Rating Summary
 //    @GetMapping("/hotel/{hotelId}/summary")
 //    public ResponseEntity<RatingSummaryDTO> getRatingSummary(
 //            @PathVariable Long hotelId) {

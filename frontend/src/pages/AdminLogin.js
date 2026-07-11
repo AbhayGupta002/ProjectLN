@@ -53,6 +53,13 @@ function AdminLogin() {
 
       // ✅ Save token
       localStorage.setItem("adminToken", token);
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        localStorage.setItem("email", payload.sub);
+        localStorage.setItem("role", payload.role);
+      } catch (e) {
+        console.error("JWT Decode failed", e);
+      }
 
       // ✅ Redirect
       navigate("/admin");

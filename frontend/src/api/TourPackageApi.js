@@ -1,7 +1,7 @@
 // src/api/hotelTourApi.js
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/tours";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/tours`;
 
 // Create a new tour package (Hotel side)
 export const createTour = async (data) => {
@@ -10,7 +10,7 @@ export const createTour = async (data) => {
     localStorage.getItem("token");
 
   return axios.post(
-    "http://localhost:8080/api/tours/create",
+    `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/tours/create`,
     data,
     {
       headers: {
@@ -77,7 +77,7 @@ export const getAllTourPackages = async () => {
     localStorage.getItem("hotelToken") ||
     localStorage.getItem("token");
 
-  return axios.get("http://localhost:8080/api/tours/all", {
+  return axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/tours/all`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

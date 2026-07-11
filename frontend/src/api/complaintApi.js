@@ -1,5 +1,5 @@
 import axios from "axios";
-const API = "http://localhost:8080/complaint";
+const API = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/complaint`;
 
 export const addComplaint = (data) => {
     return axios.post(`${API}/add`, data);

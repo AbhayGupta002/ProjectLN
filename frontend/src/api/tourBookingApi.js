@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/tour-booking";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/tour-booking`;
 
 export const createTourBooking = async (bookingData) => {
   const token = localStorage.getItem("token");

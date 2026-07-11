@@ -53,6 +53,6 @@ public class TourBooking {
     @Column(name = "booking_status")
     private BookingStatus status;
 
-    @Column(name = "canlcelbooking")
+    @Column(name = "canlcel;booking")
     private LocalDateTime cancelledAt;
 }

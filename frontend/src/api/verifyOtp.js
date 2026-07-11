@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api/otp";
+const BASE_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/otp`;
 
 // ✅ VERIFY OTP
 export const verifyOtp = async (email, otp) => {

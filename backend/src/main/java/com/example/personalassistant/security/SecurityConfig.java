@@ -44,9 +44,14 @@ public class SecurityConfig {
                                 "/api/auth/hotelregister",
                                 "/api/auth/hotellogin",
                                 "/api/auth/forgot-password",
-                                "/api/auth/reset-password"
-//                                "api/auth/adminregister",
-//                                "/api/auth/adminlogin"
+                                "/api/auth/reset-password",
+                                "/api/flights/**",
+                                "/api/flight-bookings/**",
+                                "/api/bus/**",
+                                "/api/bus-bookings/**",
+                                "/api/trains/**",
+                                "/api/train-bookings/**",
+                                "/api/payment/**"
                         ).permitAll()
 
                         .requestMatchers("/api/chat/**").permitAll()
@@ -118,6 +123,10 @@ public class SecurityConfig {
 //                           @AI AUTOMATED MODULE
                                 .requestMatchers("/api/ai/**").permitAll()
 //                                .requestMatchers("/api/ai/**").permitAll()
+
+
+                        //new things
+                                .requestMatchers("/api/destination/**").permitAll()
 
 
                         // -------------------- ANY OTHER REQUEST → AUTH REQUIRED --------------------

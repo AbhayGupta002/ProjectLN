@@ -14,8 +14,8 @@ import com.example.personalassistant.repository.HotelRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.personalassistant.repository.AdminLoginRepository;
 
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 
 @Service
@@ -39,6 +39,7 @@ public class AdminService {
 
         Response response = new Response();
 
+        // Check if email already exists
         Optional<AdminLogin> existingAdmin =
                 adminLoginRepository.findByEmail(adminDto.getEmail());
 
@@ -51,6 +52,7 @@ public class AdminService {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
+        // ✅ Create Admin entity
         Admin admin = new Admin();
         admin.setName(adminDto.getName());
         admin.setNumber(adminDto.getNumber());
@@ -58,6 +60,7 @@ public class AdminService {
 
         Admin savedAdmin = adminRepository.save(admin);
 
+        // Create Login credentials
         AdminLogin credential = new AdminLogin();
         credential.setEmail(adminDto.getEmail());
         credential.setPassword(passwordEncoder.encode(adminDto.getPassword()));
@@ -74,7 +77,7 @@ public class AdminService {
 
         Response response = new Response();
         AdminLogin adminLogin = adminLoginRepository.findByEmail(email).orElse(null);  // in optional null doesn't work
-        if (adminLogin == null) {                 /*in Optional<> null doesn't support....  */
+        if (adminLogin == null) {
             ErrorDetails error = new ErrorDetails(
                     HttpStatus.NOT_FOUND,
                     "User does not exist"

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api/hotellogindashboard";
+const BASE_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard`;
 
 //// Get token from localStorage
 //const getAuthHeader = () => {
@@ -50,7 +50,7 @@ export const getDashboardStats = async () => {
     localStorage.getItem("token");
 
   return axios.get(
-    "http://localhost:8080/api/hotellogindashboard/dashboard-stats",
+    `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard/dashboard-stats`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,0 +1,359 @@
+.booking-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+}
+
+.booking-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.booking-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.booking-header p {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+/* Search Section */
+.search-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.input-group input, .input-group select {
+  padding: 12px 16px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  outline: none;
+}
+
+.input-group input:focus, .input-group select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  align-self: flex-end;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.search-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+/* Results Grid */
+.results-section h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #0f172a;
+}
+
+.results-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.result-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+.flight-info {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex: 1;
+}
+
+.airline-badge {
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.route-details {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.time-place {
+  text-align: center;
+}
+
+.time-place h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #1e293b;
+}
+
+.time-place p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.route-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 120px;
+}
+
+.route-line span {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.line-dots {
+  width: 100%;
+  height: 2px;
+  background-color: #cbd5e1;
+  position: relative;
+}
+
+.line-dots::before, .line-dots::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  position: absolute;
+  top: -2px;
+}
+
+.line-dots::before { left: 0; }
+.line-dots::after { right: 0; }
+
+.price-book-group {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.fare-info {
+  text-align: right;
+}
+
+.fare-info p {
+  margin: 0 0 4px 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.fare-info h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.book-now-btn {
+  background-color: #10b981;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.book-now-btn:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -1px rgba(16, 185, 129, 0.3);
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 24px;
+  padding: 35px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  border: 1px solid #f1f5f9;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close-btn:hover {
+  color: #475569;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.cancel-btn {
+  flex: 1;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.pay-btn {
+  flex: 2;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.pay-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 6px 12px -1px rgba(16, 185, 129, 0.3);
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 1.1rem;
+}

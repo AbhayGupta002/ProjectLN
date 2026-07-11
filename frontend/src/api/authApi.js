@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/auth";
-const DASHBOARD_URL = "http://localhost:8080/api/dashboard";
-const HOTEL_DASHBOARD_URL = "http://localhost:8080/api/hotellogindashboard";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/auth`;
+const DASHBOARD_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/dashboard`;
+const HOTEL_DASHBOARD_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard`;
 
 
 // ---------------- AUTH -----------------
@@ -68,7 +68,7 @@ export const fetchHotelProfile = async (hotelToken) => {
 //};
 
 export const askAI = async (msg) => {
-  return await axios.post("http://localhost:8080/api/chat/ask", {
+  return await axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/chat/ask`, {
     message: msg,
   });
 };

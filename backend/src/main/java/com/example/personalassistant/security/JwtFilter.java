@@ -69,7 +69,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     } else {
                         String role = jwtUtil.extractRole(token);
                         if (role != null) {
-                            authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                            authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
                         }
                     }
 

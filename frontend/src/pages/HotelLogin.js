@@ -36,6 +36,13 @@ function HotelLogin() {
 
       // Save token
       localStorage.setItem("hotelToken", hotelToken);
+      try {
+        const payload = JSON.parse(atob(hotelToken.split(".")[1]));
+        localStorage.setItem("email", payload.sub);
+        localStorage.setItem("role", payload.role);
+      } catch (e) {
+        console.error("JWT Decode failed", e);
+      }
 
       alert("✅ Login Successful!");
       navigate("/hotel-login-dashboard");

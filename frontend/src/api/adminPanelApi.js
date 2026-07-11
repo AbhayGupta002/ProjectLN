@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import axiosInstance from "./axiosInstance";
-const BASE_URL = "http://localhost:8080/api/admin";
+const BASE_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/admin`;
 
 export const adminLogin = async (credentials) => {
   try {

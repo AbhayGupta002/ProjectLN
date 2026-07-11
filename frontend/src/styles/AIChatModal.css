@@ -211,6 +211,8 @@
   50% { transform: translateY(-10px); }
 }
 
+
+
 /* LIGHT MODE */
 .light .ai-modal {
   background: #ffffff;
@@ -254,6 +256,7 @@
 .ai-actions button:hover {
   transform: scale(1.2);
 }
+
 
 /* MINIMIZED CHAT BUBBLE */
 .ai-assistant.minimized {
@@ -347,6 +350,8 @@
   }
 }
 
+
+{/*ai chat */}
 /* QUICK ACTIONS */
 .quick-actions {
   display: flex;
@@ -404,6 +409,16 @@
   background: linear-gradient(135deg, #00c6ff, #0072ff);
   color: white;
   cursor: pointer;
+}
+
+/* TEXTAREA */
+.ai-footer textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
 }
 
 /* TRAVEL AGENT LAYOUT & CARDS */

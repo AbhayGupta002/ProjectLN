@@ -93,6 +93,9 @@ const confirmSuspendUser = async () => {
         case "users":
           res = await axiosInstance.get("/users");
           break;
+        case "activities":
+          res = await axiosInstance.get("/prompts");
+          break;
         default:
           return;
       }
@@ -162,6 +165,7 @@ const confirmSuspendUser = async () => {
         <button onClick={() => fetchData("active")}>Active Hotels</button>
         <button onClick={() => fetchData("inactive")}>Inactive Hotels</button>
         <button onClick={() => fetchData("users")}>Users</button>
+        <button onClick={() => fetchData("activities")}>Activities Log</button>
 
         <button onClick={logout} className="admin-logout">
           Logout
@@ -301,38 +305,49 @@ const confirmSuspendUser = async () => {
 
             <tbody>
               {data && data.length > 0 ? (
-                data.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.name || item.hotel}</td>
-                    <td>{item.email || item.location}</td>
-                    <td>
-                      {view === "users" ? (
-                        <button
+                view === "activities" ? (
+                  data.map((promptText, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>User AI Assistant Query</td>
+                      <td>{promptText}</td>
+                      <td><span style={{ color: "#2563eb", fontWeight: "bold" }}>LOGGED</span></td>
+                    </tr>
+                  ))
+                ) : (
+                  data.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.id}</td>
+                      <td>{item.name || item.hotel}</td>
+                      <td>{item.email || item.location}</td>
+                      <td>
+                        {view === "users" ? (
+                          <button
+                            className="admin-btn reject-btn"
+                           onClick={() => {
+                               console.log("Clicked ID:", item.id); // debug
+                               setSelectedUserId(item.id);
+                               setShowModal(true);
+                             }}
+                           >
+                             Suspend User
+                           </button>
+                        ) : (
+                          <button
                           className="admin-btn reject-btn"
-                         onClick={() => {
-                             console.log("Clicked ID:", item.id); // debug
-                             setSelectedUserId(item.id);
-                             setShowModal(true);
-                           }}
-                         >
-                           Suspend User
-                         </button>
-                      ) : (
-                        <button
-                        className="admin-btn reject-btn"
-                          onClick={() => {
-                             console.log("Hotel ID:", item.id); // debug
-                             setSelectedHotelId(item.id);
-                             setShowHotelModal(true);
-                           }}
-                         >
-                          Suspend Hotel
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                            onClick={() => {
+                               console.log("Hotel ID:", item.id); // debug
+                               setSelectedHotelId(item.id);
+                               setShowHotelModal(true);
+                             }}
+                           >
+                            Suspend Hotel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )
               ) : (
                 <tr>
                   <td colSpan="4">No Data Found</td>

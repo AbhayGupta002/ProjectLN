@@ -1,12 +1,12 @@
 package com.example.personalassistant.service;
 
-import com.example.personalassistant.entity.HotelLogin;
 import com.example.personalassistant.entity.UserLogin;
+import org.springframework.security.core.userdetails.*;
+import com.example.personalassistant.entity.HotelLogin;
 import com.example.personalassistant.repository.HotelLoginRepository;
 import com.example.personalassistant.repository.UserLoginRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

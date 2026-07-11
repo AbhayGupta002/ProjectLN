@@ -72,7 +72,7 @@ function HotelLoginDashboard() {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/hotellogindashboard/hotelprofile",
+          `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard/hotelprofile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

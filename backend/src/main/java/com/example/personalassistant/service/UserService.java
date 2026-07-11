@@ -3,6 +3,9 @@ package com.example.personalassistant.service;
 import java.util.UUID;
 import java.time.LocalDateTime;
 
+import com.example.personalassistant.entity.OtpVerification;
+import com.example.personalassistant.enums.AccountEnum;
+import com.example.personalassistant.repository.OtpRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.example.personalassistant.entity.User;
@@ -11,9 +14,7 @@ import com.example.personalassistant.dto.Response;
 import com.example.personalassistant.security.JwtUtil;
 import com.example.personalassistant.dto.ErrorDetails;
 import com.example.personalassistant.entity.UserLogin;
-import com.example.personalassistant.enums.AccountEnum;
 import com.example.personalassistant.dto.ChangePasswordDto;
-import com.example.personalassistant.repository.OtpRepository;
 import com.example.personalassistant.repository.UserRepository;
 import com.example.personalassistant.repository.UserLoginRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,7 +53,7 @@ public class UserService {
         if (userLoginRepository.existsByEmail(dto.getEmail())) {
             ErrorDetails error = new ErrorDetails(HttpStatus
                             .BAD_REQUEST,
-                    "User already exists"
+                    "User already exists try with another email"
             );
             response.setError(error);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

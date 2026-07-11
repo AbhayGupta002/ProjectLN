@@ -1,97 +1,61 @@
-.navbar-container {
-border-bottom: 1px solid #e5e7eb;
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 14px 24px;
-position: sticky;
-top: 0;
-z-index: 1000;
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --accent: #10b981;
+  --bg-slate: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
-
-/* Logo */
-.navbar-logo {
-font-size: 22px;
-font-weight: 700;
-color: #111827;
-cursor: pointer;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-
-/* Nav Links */
-.navbar-links {
-display: flex;
-gap: 24px;
-align-items: center;
+html, body {
+  font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-slate);
+  color: var(--text-main);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-
-.navbar-links a {
-font-size: 16px;
-color: #4b5563;
-text-decoration: none;
-font-weight: 500;
-transition: 0.2s;
+input, select, textarea, button {
+  font-family: inherit;
 }
 
-
-.navbar-links a:hover {
-color: #111827;
+/* Global Transition Utilities */
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
 }
 
-
-/* Buttons */
-.navbar-button {
-padding: 8px 18px;
-border-radius: 8px;
-font-size: 15px;
-font-weight: 600;
-cursor: pointer;
-transition: 0.25s ease;
-border: 1px solid transparent;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-
-.navbar-btn-login {
-background: transparent;
-border-color: #d1d5db;
-color: #374151;
+/* Premium Typography Helper Classes */
+.h1-premium {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-
-.navbar-btn-login:hover {
-border-color: #9ca3af;
-background: #f3f4f6;
+.h2-premium {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-
-.navbar-btn-signup {
-background: #4f46e5;
-color: white;
-}
-
-
-.navbar-btn-signup:hover {
-background: #4338ca;
-}
-
-
-/* Mobile Menu */
-.navbar-menu-icon {
-display: none;
-font-size: 28px;
-cursor: pointer;
-}
-
-
-@media (max-width: 768px) {
-.navbar-links {
-display: none;
-}
-
-
-.navbar-menu-icon {
-display: block;
-}
+/* Simple Glassmorphism utility */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }

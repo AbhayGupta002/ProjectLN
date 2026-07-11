@@ -35,7 +35,7 @@ function HotelCreateTour() {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/hotellogindashboard/hotelprofile",
+          `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard/hotelprofile`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -68,7 +68,7 @@ function HotelCreateTour() {
       };
 
       await axios.post(
-        "http://localhost:8080/api/tour/create",
+        `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/tour/create`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
