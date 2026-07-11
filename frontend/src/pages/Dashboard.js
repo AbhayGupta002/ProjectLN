@@ -6,6 +6,7 @@ import { getUserFlightBookings, cancelFlightBooking } from "../api/flightBooking
 import { getUserBusBookings, cancelBusBooking } from "../api/busBookingApi";
 import { getUserTrainBookings, cancelTrainBooking } from "../api/trainBookingApi";
 import "../styles/Dashboard.css";
+import AIChatModal from "../components/AIChatModal";
 
 const API_BASE = process.env.REACT_APP_API_URL || `${process.env.REACT_APP_API_URL || "http://localhost:8080"}`;
 
@@ -14,6 +15,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const dropdownRef = useRef();
   const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [openAI, setOpenAI] = useState(false);
 
   /* ------------------- STATE ------------------- */
   const [profile, setProfile] = useState(null);
@@ -247,6 +249,9 @@ function Dashboard() {
             </li>
             <li onClick={() => setShowProfilePanel(true)}>
               <Settings size={18} /> Edit Profile
+            </li>
+            <li onClick={() => setOpenAI(true)} style={{ color: "#a855f7", fontWeight: "bold" }}>
+              <MessageSquare size={18} /> AI Travel Agent
             </li>
             <li onClick={handleLogout} style={{ color: "#ef4444", marginTop: 40 }}>
               <LogOut size={18} /> Logout
@@ -540,6 +545,8 @@ function Dashboard() {
           </div>
         </div>
       </main>
+
+      {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
     </div>
   );
 }
