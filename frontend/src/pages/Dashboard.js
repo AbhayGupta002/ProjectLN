@@ -68,23 +68,6 @@ function Dashboard() {
     fetchProfile();
   }, [navigate]);
 
-  useEffect(() => {
-    if (openPanel === "search-hotels" && searchResults.length === 0) {
-      const fetchInitialHotels = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const res = await axios.get(`${API_BASE}/api/dashboard/get-active-hotel`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setSearchResults(res.data?.data || res.data || []);
-        } catch (e) {
-          console.error("Error loading active hotels:", e);
-        }
-      };
-      fetchInitialHotels();
-    }
-  }, [openPanel, searchResults.length]);
-
   const fetchUserAllBookings = async (userId, token) => {
     try {
       // Hotel bookings
@@ -392,123 +375,125 @@ function Dashboard() {
                   </div>
                 </div>
 
-                {/* Hotels Bookings */}
-                {bookingTab === "hotels" && (
-                  <div className="booking-list">
-                    {bookings.length === 0 ? <p style={{ color: "#64748b" }}>No hotel bookings found.</p> :
-                      bookings.map((b, i) => (
-                        <div className="booking-item-card" key={i}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                            <div>
-                              <h4>{b.hotel?.hotel || b.hotelName || "LuxNes Premium Stay"}</h4>
-                              <p style={{ margin: "4px 0", color: "#64748b" }}>City: {b.hotel?.city || "N/A"} | Price: ₹{b.amount || "N/A"}</p>
-                              <p style={{ margin: "4px 0", color: "#64748b" }}>
-                                Check-in: {b.checkIn ? b.checkIn.split("T")[0] : "N/A"} | Check-out: {b.checkOut ? b.checkOut.split("T")[0] : "N/A"}
-                              </p>
-                              <p style={{ fontSize: "0.85rem" }}>
-                                Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
-                                  {b.bookingStatus || "CONFIRMED"}
-                                </span>
-                              </p>
+                <div className="scroll-list" style={{ maxHeight: "420px", overflowY: "auto", paddingRight: "6px" }}>
+                  {/* Hotels Bookings */}
+                  {bookingTab === "hotels" && (
+                    <div className="booking-list">
+                      {bookings.length === 0 ? <p style={{ color: "#64748b" }}>No hotel bookings found.</p> :
+                        bookings.map((b, i) => (
+                          <div className="booking-item-card" key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                              <div>
+                                <h4>{b.hotel?.hotel || b.hotelName || "LuxNes Premium Stay"}</h4>
+                                <p style={{ margin: "4px 0", color: "#64748b" }}>City: {b.hotel?.city || "N/A"} | Price: ₹{b.amount || "N/A"}</p>
+                                <p style={{ margin: "4px 0", color: "#64748b" }}>
+                                  Check-in: {b.checkIn ? b.checkIn.split("T")[0] : "N/A"} | Check-out: {b.checkOut ? b.checkOut.split("T")[0] : "N/A"}
+                                </p>
+                                <p style={{ fontSize: "0.85rem" }}>
+                                  Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+                                    {b.bookingStatus || "CONFIRMED"}
+                                  </span>
+                                </p>
+                              </div>
+                              {b.bookingStatus !== "CANCELLED" && (
+                                <button className="cancel-booking-btn" onClick={() => handleCancelHotel(b.id)}>
+                                  Cancel Booking
+                                </button>
+                              )}
                             </div>
-                            {b.bookingStatus !== "CANCELLED" && (
-                              <button className="cancel-booking-btn" onClick={() => handleCancelHotel(b.id)}>
-                                Cancel Booking
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
+                        ))
+                      }
+                    </div>
+                  )}
 
-                {/* Flights Bookings */}
-                {bookingTab === "flights" && (
-                  <div className="booking-list">
-                    {flightBookings.length === 0 ? <p style={{ color: "#64748b" }}>No flight bookings found.</p> :
-                      flightBookings.map((b, i) => (
-                        <div className="booking-item-card" key={i}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                            <div>
-                              <h4>Passenger: {b.passengerName} ({b.passengerGender})</h4>
-                              <p style={{ margin: "4px 0" }}>Flight ID: {b.flightId} | Seats: {b.numberOfSeats}</p>
-                              <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
-                              <p style={{ fontSize: "0.85rem" }}>
-                                Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
-                                  {b.bookingStatus}
-                                </span>
-                              </p>
+                  {/* Flights Bookings */}
+                  {bookingTab === "flights" && (
+                    <div className="booking-list">
+                      {flightBookings.length === 0 ? <p style={{ color: "#64748b" }}>No flight bookings found.</p> :
+                        flightBookings.map((b, i) => (
+                          <div className="booking-item-card" key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                              <div>
+                                <h4>Passenger: {b.passengerName} ({b.passengerGender})</h4>
+                                <p style={{ margin: "4px 0" }}>Flight ID: {b.flightId} | Seats: {b.numberOfSeats}</p>
+                                <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
+                                <p style={{ fontSize: "0.85rem" }}>
+                                  Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+                                    {b.bookingStatus}
+                                  </span>
+                                </p>
+                              </div>
+                              {b.bookingStatus !== "CANCELLED" && (
+                                <button className="cancel-booking-btn" onClick={() => handleCancelFlight(b.id)}>
+                                  Cancel Flight
+                                </button>
+                              )}
                             </div>
-                            {b.bookingStatus !== "CANCELLED" && (
-                              <button className="cancel-booking-btn" onClick={() => handleCancelFlight(b.id)}>
-                                Cancel Flight
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
+                        ))
+                      }
+                    </div>
+                  )}
 
-                {/* Buses Bookings */}
-                {bookingTab === "buses" && (
-                  <div className="booking-list">
-                    {busBookings.length === 0 ? <p style={{ color: "#64748b" }}>No bus bookings found.</p> :
-                      busBookings.map((b, i) => (
-                        <div className="booking-item-card" key={i}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                            <div>
-                              <h4>Passenger: {b.passengerName}</h4>
-                              <p style={{ margin: "4px 0" }}>Bus ID: {b.busId} | Seats: {b.numberOfSeats}</p>
-                              <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
-                              <p style={{ fontSize: "0.85rem" }}>
-                                Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
-                                  {b.bookingStatus}
-                                </span>
-                              </p>
+                  {/* Buses Bookings */}
+                  {bookingTab === "buses" && (
+                    <div className="booking-list">
+                      {busBookings.length === 0 ? <p style={{ color: "#64748b" }}>No bus bookings found.</p> :
+                        busBookings.map((b, i) => (
+                          <div className="booking-item-card" key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                              <div>
+                                <h4>Passenger: {b.passengerName}</h4>
+                                <p style={{ margin: "4px 0" }}>Bus ID: {b.busId} | Seats: {b.numberOfSeats}</p>
+                                <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
+                                <p style={{ fontSize: "0.85rem" }}>
+                                  Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+                                    {b.bookingStatus}
+                                  </span>
+                                </p>
+                              </div>
+                              {b.bookingStatus !== "CANCELLED" && (
+                                <button className="cancel-booking-btn" onClick={() => handleCancelBus(b.id)}>
+                                  Cancel Seat
+                                </button>
+                              )}
                             </div>
-                            {b.bookingStatus !== "CANCELLED" && (
-                              <button className="cancel-booking-btn" onClick={() => handleCancelBus(b.id)}>
-                                Cancel Seat
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
+                        ))
+                      }
+                    </div>
+                  )}
 
-                {/* Trains Bookings */}
-                {bookingTab === "trains" && (
-                  <div className="booking-list">
-                    {trainBookings.length === 0 ? <p style={{ color: "#64748b" }}>No train bookings found.</p> :
-                      trainBookings.map((b, i) => (
-                        <div className="booking-item-card" key={i}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                            <div>
-                              <h4>Passenger: {b.passengerName}</h4>
-                              <p style={{ margin: "4px 0" }}>Train ID: {b.trainId} | Tickets: {b.numberOfSeats}</p>
-                              <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
-                              <p style={{ fontSize: "0.85rem" }}>
-                                Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
-                                  {b.bookingStatus}
-                                </span>
-                              </p>
+                  {/* Trains Bookings */}
+                  {bookingTab === "trains" && (
+                    <div className="booking-list">
+                      {trainBookings.length === 0 ? <p style={{ color: "#64748b" }}>No train bookings found.</p> :
+                        trainBookings.map((b, i) => (
+                          <div className="booking-item-card" key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                              <div>
+                                <h4>Passenger: {b.passengerName}</h4>
+                                <p style={{ margin: "4px 0" }}>Train ID: {b.trainId} | Tickets: {b.numberOfSeats}</p>
+                                <p style={{ margin: "4px 0", color: "#64748b" }}>Journey Date: {b.journeyDate} | Fare: ₹{b.totalFare}</p>
+                                <p style={{ fontSize: "0.85rem" }}>
+                                  Status: <span style={{ color: b.bookingStatus === "CANCELLED" ? "#ef4444" : "#10b981", fontWeight: 700 }}>
+                                    {b.bookingStatus}
+                                  </span>
+                                </p>
+                              </div>
+                              {b.bookingStatus !== "CANCELLED" && (
+                                <button className="cancel-booking-btn" onClick={() => handleCancelTrain(b.id)}>
+                                  Cancel Ticket
+                                </button>
+                              )}
                             </div>
-                            {b.bookingStatus !== "CANCELLED" && (
-                              <button className="cancel-booking-btn" onClick={() => handleCancelTrain(b.id)}>
-                                Cancel Ticket
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -632,53 +617,55 @@ function Dashboard() {
                   </button>
                 </div>
 
-                <div className="hotels-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-                  {searchResults.length === 0 ? (
-                    <p style={{ gridColumn: "1/-1", color: "#64748b", textAlign: "center", padding: 20 }}>No hotels found matching your search query.</p>
-                  ) : (
-                    searchResults.map((hotel) => (
-                      <div
-                        key={hotel.id}
-                        className="hotel-booking-card"
-                        style={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 16,
-                          padding: 20,
-                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          gap: 15
-                        }}
-                      >
-                        <div>
-                          <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{hotel.hotel}</h4>
-                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>📍 City: <strong>{hotel.city}</strong></p>
-                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>✉️ Contact: {hotel.email}</p>
-                          <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>🏨 Rooms Available: {hotel.roomavl || hotel.availableRooms || 5}</p>
-                          <p style={{ fontSize: "1.1rem", fontWeight: 800, color: "#2563eb", marginTop: 10 }}>₹{hotel.price} <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 400 }}>/ night</span></p>
-                        </div>
-                        <button
-                          onClick={() => handleBookHotel(hotel.id)}
-                          disabled={bookingHotelId === hotel.id}
+                <div className="scroll-list" style={{ maxHeight: "420px", overflowY: "auto", paddingRight: "6px" }}>
+                  <div className="hotels-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+                    {searchResults.length === 0 ? (
+                      <p style={{ gridColumn: "1/-1", color: "#64748b", textAlign: "center", padding: 20 }}>No hotels found. Type a query above to search stays.</p>
+                    ) : (
+                      searchResults.map((hotel) => (
+                        <div
+                          key={hotel.id}
+                          className="hotel-booking-card"
                           style={{
-                            width: "100%",
-                            padding: "10px",
-                            borderRadius: 10,
-                            border: "none",
-                            background: "linear-gradient(135deg, #10b981, #059669)",
-                            color: "white",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: 16,
+                            padding: 20,
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            gap: 15
                           }}
                         >
-                          {bookingHotelId === hotel.id ? "Booking..." : "Book Room"}
-                        </button>
-                      </div>
-                    ))
-                  )}
+                          <div>
+                            <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{hotel.hotel}</h4>
+                            <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>📍 City: <strong>{hotel.city}</strong></p>
+                            <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>✉️ Contact: {hotel.email}</p>
+                            <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 4 }}>🏨 Rooms Available: {hotel.roomavl || hotel.availableRooms || 5}</p>
+                            <p style={{ fontSize: "1.1rem", fontWeight: 800, color: "#2563eb", marginTop: 10 }}>₹{hotel.price} <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 400 }}>/ night</span></p>
+                          </div>
+                          <button
+                            onClick={() => handleBookHotel(hotel.id)}
+                            disabled={bookingHotelId === hotel.id}
+                            style={{
+                              width: "100%",
+                              padding: "10px",
+                              borderRadius: 10,
+                              border: "none",
+                              background: "linear-gradient(135deg, #10b981, #059669)",
+                              color: "white",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            {bookingHotelId === hotel.id ? "Booking..." : "Book Room"}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
