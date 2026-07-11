@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { MessageSquare, User, LogOut, Settings, HelpCircle } from "lucide-react";
 import "../styles/HomeNavbar.css";
 import AIChatModal from "../components/AIChatModal";
-import { User, LogOut, Menu, X, MessageSquare, Compass, Shield } from "lucide-react";
 
 function Navbar() {
   const [open, setOpen] = useState(false);
   const [openAI, setOpenAI] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
   const dropdownRef = useRef();
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token") || localStorage.getItem("hotelToken") || localStorage.getItem("adminToken");
-  const role = localStorage.getItem("role"); // User, Hotel, Admin
-  const email = localStorage.getItem("email");
+  // Detect login status from localStorage
+  useEffect(() => {
+    const userEmail = localStorage.getItem("email");
+    const userRole = localStorage.getItem("role");
+    if (userEmail) {
+      setEmail(userEmail);
+      setRole(userRole || "User");
+    }
+  }, []);
 
+  // Handle outside clicks to close profile dropdown
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -26,61 +34,63 @@ function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.clear();
-    setOpen(false);
-    navigate("/login");
-  };
-
-  const getDashboardLink = () => {
-    if (role === "Hotel") return "/hotel/dashboard";
-    if (role === "Admin") return "/admin/dashboard";
-    return "/dashboard";
+    localStorage.removeItem("token");
+    localStorage.removeItem("hotelToken");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role");
+    setEmail("");
+    setRole("");
+    navigate("/");
+    window.location.reload();
   };
 
   return (
     <nav className="nav">
       <div className="nav-left">
-        <Link to="/" className="logo">
-          <Compass size={24} style={{ color: "#2563eb", strokeWidth: 2.5 }} />
-          <span>LuxNes Travel</span>
-        </Link>
-        <div className={`header-links ${mobileMenuOpen ? "mobile-active" : ""}`}>
-          <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-          <Link to="/flights" onClick={() => setMobileMenuOpen(false)}>Flights</Link>
-          <Link to="/buses" onClick={() => setMobileMenuOpen(false)}>Buses</Link>
-          <Link to="/trains" onClick={() => setMobileMenuOpen(false)}>Trains</Link>
-          <Link to="/hotels" onClick={() => setMobileMenuOpen(false)}>Hotels</Link>
+        <Link to="/" className="logo">Hotel-LuxNes</Link>
+        <div className="header-links">
+          <Link to="/view-hotels">view-hotels</Link>
+          <Link to="/about-us">about-us</Link>
+          <Link to="/contact-us">contact-us</Link>
+          <Link to="/complaint">complaint</Link>
+          <Link to="/feedback">feedback</Link>
         </div>
       </div>
 
+      <div className="nav-search">
+        <input type="text" placeholder="Search..." />
+      </div>
+
       <div className="nav-right">
-        {/* AI ASSISTANT BUTTON */}
+        {/* 🔥 AI ASSISTANT HEADER BUTTON */}
         <button
           className="ai-assistant-btn"
           title="Ask AI Assistant"
           onClick={() => setOpenAI(true)}
         >
-          <MessageSquare size={18} />
+          <MessageSquare size={16} />
           <span>AI Assistant</span>
         </button>
 
-        {/* User Account / Login Dropdown */}
-        {token ? (
+        {/* PROFILE OR AUTH BUTTONS */}
+        {email ? (
           <div className="dropdown" ref={dropdownRef}>
             <button className="profile-btn" onClick={() => setOpen(!open)}>
-              <User size={18} />
-              <span className="profile-email">{email ? email.split("@")[0] : "Account"}</span>
+              <User size={16} />
+              <span className="profile-email">{email}</span>
             </button>
+
             {open && (
               <div className="dropdown-menu">
-                <Link to={getDashboardLink()} onClick={() => setOpen(false)}>
-                  <Shield size={16} /> My Dashboard
+                <div style={{ padding: "10px 16px", fontSize: "0.8rem", color: "#64748b", borderBottom: "1px solid #f1f5f9" }}>
+                  Logged in as: <strong>{role}</strong>
+                </div>
+                <Link to={role === "ADMIN" ? "/admin" : role === "Hotel" ? "/hotel-login-dashboard" : "/dashboard"} onClick={() => setOpen(false)}>
+                  <Settings size={14} /> My Dashboard
                 </Link>
-                <Link to="/update-profile" onClick={() => setOpen(false)}>
-                  <User size={16} /> Edit Profile
-                </Link>
-                <button className="logout-btn" onClick={handleLogout}>
-                  <LogOut size={16} /> Logout
+                <button onClick={handleLogout} className="logout-btn">
+                  <LogOut size={14} /> Logout
                 </button>
               </div>
             )}
@@ -91,11 +101,6 @@ function Navbar() {
             <Link to="/register" className="register-nav-btn">Sign Up</Link>
           </div>
         )}
-
-        {/* Hamburger Menu Icon */}
-        <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </div>
 
       {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
