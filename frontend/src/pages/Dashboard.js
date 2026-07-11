@@ -10,7 +10,7 @@ import "../styles/Dashboard.css";
 const API_BASE = process.env.REACT_APP_API_URL || `${process.env.REACT_APP_API_URL || "http://localhost:8080"}`;
 
 function Dashboard() {
-  const [openPanel, setOpenPanel] = useState("bookings"); 
+  const [openPanel, setOpenPanel] = useState("overview"); 
   const navigate = useNavigate();
   const dropdownRef = useRef();
   const [showProfilePanel, setShowProfilePanel] = useState(false);
@@ -151,6 +151,60 @@ function Dashboard() {
     }
   };
 
+  const getAllTransactions = () => {
+    const list = [];
+    
+    // 1. Hotels
+    bookings.forEach(b => {
+      list.push({
+        id: `TXN-HTL-${b.id || 100 + Math.floor(Math.random() * 900)}`,
+        type: "Hotel Stay",
+        details: b.hotelName || `Hotel Booking (Room ID: ${b.hotelId || "Standard"})`,
+        date: b.checkIn || "N/A",
+        amount: b.amount || 2500,
+        status: "CONFIRMED"
+      });
+    });
+
+    // 2. Flights
+    flightBookings.forEach(b => {
+      list.push({
+        id: `TXN-FLT-${b.id || 200 + Math.floor(Math.random() * 900)}`,
+        type: "Flight Ticket",
+        details: `Flight: ${b.flightId} | Passenger: ${b.passengerName}`,
+        date: b.journeyDate || "N/A",
+        amount: b.totalFare || 0,
+        status: b.bookingStatus || "CONFIRMED"
+      });
+    });
+
+    // 3. Buses
+    busBookings.forEach(b => {
+      list.push({
+        id: `TXN-BUS-${b.id || 300 + Math.floor(Math.random() * 900)}`,
+        type: "Bus Ticket",
+        details: `Bus ID: ${b.busId} | Passenger: ${b.passengerName}`,
+        date: b.journeyDate || "N/A",
+        amount: b.totalFare || 0,
+        status: b.bookingStatus || "CONFIRMED"
+      });
+    });
+
+    // 4. Trains
+    trainBookings.forEach(b => {
+      list.push({
+        id: `TXN-TRN-${b.id || 400 + Math.floor(Math.random() * 900)}`,
+        type: "Train Ticket",
+        details: `Train ID: ${b.trainId} | Passenger: ${b.passengerName}`,
+        date: b.journeyDate || "N/A",
+        amount: b.totalFare || 0,
+        status: b.bookingStatus || "CONFIRMED"
+      });
+    });
+
+    return list;
+  };
+
   /* ------------------- RENDER ------------------- */
   if (loading) return <p style={{ padding: 40, fontFamily: "Inter, sans-serif" }}>Loading your travel dashboard...</p>;
   if (!profile) return <p style={{ padding: 40, fontFamily: "Inter, sans-serif" }}>No profile found.</p>;
@@ -169,6 +223,9 @@ function Dashboard() {
             </li>
             <li className={openPanel === "bookings" ? "active-link" : ""} onClick={() => { setOpenPanel("bookings"); setShowProfilePanel(false); }}>
               <HotelIcon size={18} /> My Bookings
+            </li>
+            <li className={openPanel === "transactions" ? "active-link" : ""} onClick={() => { setOpenPanel("transactions"); setShowProfilePanel(false); }}>
+              <History size={18} /> Transactions
             </li>
             <li onClick={() => setShowProfilePanel(true)}>
               <Settings size={18} /> Edit Profile
@@ -368,6 +425,10 @@ function Dashboard() {
                 <p style={{ color: "#64748b", margin: "10px 0 30px 0" }}>Manage your account settings, view active tickets and interact with customer support portals.</p>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+                  <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", padding: 20, borderRadius: 16 }}>
+                    <h3 style={{ color: "#065f46" }}>{bookings.length}</h3>
+                    <p style={{ color: "#065f46" }}>Hotel Stays</p>
+                  </div>
                   <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: 20, borderRadius: 16 }}>
                     <h3 style={{ color: "#1e40af" }}>{flightBookings.filter(b => b.bookingStatus !== "CANCELLED").length}</h3>
                     <p style={{ color: "#1e40af" }}>Active Flights</p>
@@ -380,6 +441,69 @@ function Dashboard() {
                     <h3 style={{ color: "#5b21b6" }}>{trainBookings.filter(b => b.bookingStatus !== "CANCELLED").length}</h3>
                     <p style={{ color: "#5b21b6" }}>Active Trains</p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TRANSACTIONS PANEL */}
+            {openPanel === "transactions" && (
+              <div className="glass-card">
+                <h2>Transaction History</h2>
+                <p style={{ color: "#64748b", marginBottom: 20 }}>Unified billing logs for all payments and reservations.</p>
+
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Txn ID</th>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Type</th>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Details</th>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Date</th>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Amount</th>
+                        <th style={{ padding: "12px 16px", color: "#475569", fontWeight: 600 }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getAllTransactions().length === 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ padding: 20, textAlign: "center", color: "#64748b" }}>No transaction records found.</td>
+                        </tr>
+                      ) : (
+                        getAllTransactions().map((tx, idx) => (
+                          <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "12px 16px", fontSize: "0.9rem", fontFamily: "monospace", color: "#64748b" }}>{tx.id}</td>
+                            <td style={{ padding: "12px 16px" }}>
+                              <span style={{
+                                backgroundColor: "#f1f5f9",
+                                padding: "4px 8px",
+                                borderRadius: 6,
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                                color: "#475569"
+                              }}>
+                                {tx.type}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 16px", fontSize: "0.9rem", fontWeight: 500 }}>{tx.details}</td>
+                            <td style={{ padding: "12px 16px", fontSize: "0.9rem" }}>{tx.date}</td>
+                            <td style={{ padding: "12px 16px", fontWeight: 700, color: "#0f172a" }}>₹{tx.amount}</td>
+                            <td style={{ padding: "12px 16px" }}>
+                              <span style={{
+                                backgroundColor: tx.status === "CANCELLED" ? "#fef2f2" : "#ecfdf5",
+                                color: tx.status === "CANCELLED" ? "#ef4444" : "#10b981",
+                                padding: "4px 8px",
+                                borderRadius: 6,
+                                fontSize: "0.8rem",
+                                fontWeight: 600
+                              }}>
+                                {tx.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
