@@ -61,16 +61,13 @@ public class JwtFilter extends OncePerRequestFilter {
                         log.debug("UserDetails not found for {} : {}", username, ex.getMessage());
                     }
 
-                    // build authorities: prefer authorities from userDetails if available,
-                    // otherwise build from token role claim
+                    // build authorities: prefer signed token role claim to enforce cryptographic scope
                     Collection<? extends GrantedAuthority> authorities = List.of();
-                    if (userDetails != null) {
+                    String role = jwtUtil.extractRole(token);
+                    if (role != null && !role.trim().isEmpty()) {
+                        authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                    } else if (userDetails != null) {
                         authorities = userDetails.getAuthorities();
-                    } else {
-                        String role = jwtUtil.extractRole(token);
-                        if (role != null) {
-                            authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-                        }
                     }
 
                     // set Authentication if we have any authority or userDetails

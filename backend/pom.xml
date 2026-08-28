@@ -32,6 +32,12 @@
       <version>3.2.4</version>
     </dependency>
 
+    <!-- Spring Boot Actuator for Production Health & Metrics -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
 
 
     <!-- Spring Boot JPA -->

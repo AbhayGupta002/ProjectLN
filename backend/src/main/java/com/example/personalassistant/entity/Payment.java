@@ -19,9 +19,15 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FK to TourBooking
+    @Column(name = "booking_type")
+    private String bookingType; // HOTEL, TOUR, FLIGHT, BUS, TRAIN, CAB
+
+    @Column(name = "booking_id")
+    private Long bookingId;
+
+    // FK to TourBooking (optional/nullable for other booking types)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tour_id", nullable = false)
+    @JoinColumn(name = "tour_id", nullable = true)
     private TourBooking booking;
 
     @Column(name = "razorpay_order_id", unique = true)

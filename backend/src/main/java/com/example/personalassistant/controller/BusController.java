@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/bus")
-@CrossOrigin(origins = "*")
 public class BusController {
 
     @Autowired
@@ -25,7 +24,7 @@ public class BusController {
     }
 
     // Get All Buses
-    @GetMapping("/all")
+    @GetMapping({"", "/all"})
     public ResponseEntity<Response> getAllBuses() {
 
         return busService.getAllBuses();

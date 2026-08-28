@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")   // ✅ SAME BASE PATH
-@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     @Autowired
@@ -40,6 +39,13 @@ public class AuthController {
     @Qualifier("userDetailsService")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         return userService.loginUser(req.getEmail(), req.getPassword());
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<?> verify2fa(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        return userService.verify2fa(email, otp);
     }
 
 //    @PostMapping("/login")   // /api/auth/login wo

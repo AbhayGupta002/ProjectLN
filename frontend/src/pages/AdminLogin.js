@@ -51,17 +51,22 @@ function AdminLogin() {
         return;
       }
 
-      // ✅ Save token
+      // Clear conflicting tokens
+      localStorage.removeItem("token");
+      localStorage.removeItem("hotelToken");
+
+      // Save token
       localStorage.setItem("adminToken", token);
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        localStorage.setItem("email", payload.sub);
-        localStorage.setItem("role", payload.role);
+        localStorage.setItem("email", payload.sub || email);
+        localStorage.setItem("role", "ADMIN");
       } catch (e) {
-        console.error("JWT Decode failed", e);
+        localStorage.setItem("email", email);
+        localStorage.setItem("role", "ADMIN");
       }
 
-      // ✅ Redirect
+      // Redirect
       navigate("/admin");
 
     } catch (err) {
@@ -126,9 +131,23 @@ function AdminLogin() {
           {error && <p className="error">{error}</p>}
 
           <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Login to Admin Portal"}
           </button>
 
+          <div style={{ marginTop: "20px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between" }}>
+            <span
+              style={{ color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}
+              onClick={() => navigate("/login")}
+            >
+              👤 Traveler Login
+            </span>
+            <span
+              style={{ color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}
+              onClick={() => navigate("/hotel-login")}
+            >
+              🏨 Hotel Login
+            </span>
+          </div>
         </form>
       </div>
     </div>

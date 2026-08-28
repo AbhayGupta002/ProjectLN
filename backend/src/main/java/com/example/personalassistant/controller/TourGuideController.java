@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/guide")
-@CrossOrigin(origins = "*")
 public class TourGuideController {
 
     @Autowired

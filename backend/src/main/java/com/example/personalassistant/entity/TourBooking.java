@@ -7,7 +7,12 @@ import com.example.personalassistant.enums.BookingStatus;
 
 
 @Entity
-@Table(name = "tour_booking")
+@Table(name = "tour_booking", indexes = {
+        @Index(name = "idx_tb_user", columnList = "user_id"),
+        @Index(name = "idx_tb_hotel", columnList = "hotel_id"),
+        @Index(name = "idx_tb_destination", columnList = "destination"),
+        @Index(name = "idx_tb_email", columnList = "email")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -53,6 +58,9 @@ public class TourBooking {
     @Column(name = "booking_status")
     private BookingStatus status;
 
-    @Column(name = "canlcel;booking")
+    @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    @Version
+    private Long version;
 }

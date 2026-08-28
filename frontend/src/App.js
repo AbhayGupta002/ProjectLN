@@ -1,6 +1,6 @@
 import React from "react";
 import "./index.css";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -51,7 +51,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["USER"]}>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -59,7 +59,7 @@ function App() {
         <Route
           path="/update-profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["USER", "HOTEL"]}>
               <UpdateProfile />
             </ProtectedRoute>
           }
@@ -67,7 +67,7 @@ function App() {
         <Route
           path="/book-hotel"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["USER"]}>
               <BookHotel />
             </ProtectedRoute>
           }
@@ -75,7 +75,7 @@ function App() {
         <Route
           path="/complaint"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["USER"]}>
               <ComplaintForm />
             </ProtectedRoute>
           }
@@ -83,7 +83,7 @@ function App() {
         <Route
           path="/my-complaints"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["USER"]}>
               <ComplaintList userId={1} />
             </ProtectedRoute>
           }
@@ -93,7 +93,7 @@ function App() {
         <Route
           path="/hotel-login-dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["HOTEL"]}>
               <HotelLoginDashboard />
             </ProtectedRoute>
           }
@@ -101,7 +101,7 @@ function App() {
         <Route
           path="/hotel/create-tour"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["HOTEL"]}>
               <HotelTourCreate />
             </ProtectedRoute>
           }
@@ -109,7 +109,7 @@ function App() {
         <Route
           path="/hotel-profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["HOTEL"]}>
               <HotelProfile />
             </ProtectedRoute>
           }
@@ -117,7 +117,7 @@ function App() {
         <Route
           path="/hotel/update-profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["HOTEL"]}>
               <UpdateProfile />
             </ProtectedRoute>
           }
@@ -128,11 +128,9 @@ function App() {
         <Route
           path="/admin"
           element={
-            localStorage.getItem("adminToken") ? (
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
               <AdminDashboard />
-            ) : (
-              <Navigate to="/admin-login" replace />
-            )
+            </ProtectedRoute>
           }
         />
 

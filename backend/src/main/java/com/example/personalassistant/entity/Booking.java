@@ -16,11 +16,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @ToString(exclude = {"user", "hotel"})
 @EqualsAndHashCode(exclude = {"user", "hotel"})
 @Entity
-@Table(name = "bookings",
-        uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "hotel_id"})
-}
-)
+@Table(name = "bookings", indexes = {
+        @Index(name = "idx_booking_user", columnList = "user_id"),
+        @Index(name = "idx_booking_hotel", columnList = "hotel_id"),
+        @Index(name = "idx_booking_status", columnList = "booking_status")
+})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +51,10 @@ public class Booking {
     @Column(name = "payment")
     private String paymentStatus;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "booking_status")
     private BookingStatus bookingStatus;
+
+    @Version
+    private Long version;
 }

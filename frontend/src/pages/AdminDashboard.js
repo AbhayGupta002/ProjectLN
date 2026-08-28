@@ -106,6 +106,8 @@ const confirmSuspendUser = async () => {
 
     } catch (err) {
       console.error("FETCH ERROR:", err);
+      setData([]);
+      setView(type);
     }
   };
 
@@ -151,7 +153,9 @@ const confirmSuspendUser = async () => {
 
   const logout = () => {
     localStorage.removeItem("adminToken");
-    navigate("/admin-login"); // ✅ correct
+    localStorage.removeItem("role");
+    localStorage.removeItem("email");
+    navigate("/admin-login");
   };
 
   return (

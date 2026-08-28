@@ -96,6 +96,7 @@ public class UserService {
             login.setEmail(dto.getEmail());
             login.setPassword(passwordEncoder.encode(dto.getPassword()));
             login.setEmailVerified(true);
+            login.setTwoFactorEnabled(false);
 
             userLoginRepository.save(login);
 
@@ -107,32 +108,112 @@ public class UserService {
 
 
     public ResponseEntity<Response> loginUser(String email, String password) {
+        Response response = new Response();
+        UserLogin user = userLoginRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.NOT_FOUND,
+                    "User does not exist"
+            );
+            response.setError(error);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
 
-    Response response = new Response();
-    UserLogin user = userLoginRepository.findByEmail(email).orElse(null);  // in optional null doesn't work
-    if (user == null) {                 /*in Optional<> null doesn't support....  */
-        ErrorDetails error = new ErrorDetails(
-                HttpStatus.NOT_FOUND,
-                "User does not exist"
-        );
-        response.setError(error);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // 🔒 CHECK LOCKOUT (4 failed attempts)
+        if (user.isAccountLocked()) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.LOCKED,
+                    "Account locked due to 4 consecutive failed password attempts. Please use password retrieval (Forgot Password) to unlock your account."
+            );
+            response.setError(error);
+            return ResponseEntity.status(HttpStatus.LOCKED).body(response);
+        }
+
+        // CHECK PASSWORD
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            int attempts = user.getFailedLoginAttempts() + 1;
+            user.setFailedLoginAttempts(attempts);
+
+            if (attempts >= 4) {
+                user.setAccountLocked(true);
+                userLoginRepository.save(user);
+                ErrorDetails error = new ErrorDetails(
+                        HttpStatus.LOCKED,
+                        "Account locked due to 4 consecutive failed password attempts. Please use password retrieval (Forgot Password) to unlock your account."
+                );
+                response.setError(error);
+                return ResponseEntity.status(HttpStatus.LOCKED).body(response);
+            } else {
+                userLoginRepository.save(user);
+                int remaining = 4 - attempts;
+                ErrorDetails error = new ErrorDetails(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid email or password. " + remaining + " attempts remaining before account lockout."
+                );
+                response.setError(error);
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        // Password matches -> reset attempts
+        user.setFailedLoginAttempts(0);
+        userLoginRepository.save(user);
+
+        // 🔐 2FA LOGIN: Send OTP if enabled
+        if (user.isTwoFactorEnabled()) {
+            String otp = otpService.generateAndSendOtp(email);
+            user.setTwoFactorOtp(otp);
+            user.setTwoFactorOtpExpiry(java.time.LocalDateTime.now().plusMinutes(5));
+            userLoginRepository.save(user);
+
+            java.util.Map<String, Object> twoFactorData = new java.util.HashMap<>();
+            twoFactorData.put("requires2fa", true);
+            twoFactorData.put("email", email);
+            twoFactorData.put("devOtp", otp);
+            twoFactorData.put("message", "2FA OTP sent to your registered email. (Local Code: " + otp + ")");
+
+            response.setData(twoFactorData);
+            return ResponseEntity.ok(response);
+        }
+
+        String token = jwtUtil.generateToken(email, "User");
+        response.setData(token);
+        return ResponseEntity.ok(response);
     }
 
-    if (!passwordEncoder.matches(password, user.getPassword())) {
-        ErrorDetails error = new ErrorDetails(
-                HttpStatus.BAD_REQUEST,
-                "Invalid email or password"
-        );
-        response.setError(error);
-        return ResponseEntity.badRequest().body(response);
+    public ResponseEntity<Response> verify2fa(String email, String otp) {
+        Response response = new Response();
+        UserLogin user = userLoginRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            response.setError(new ErrorDetails(HttpStatus.NOT_FOUND, "User not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        if (user.isAccountLocked()) {
+            response.setError(new ErrorDetails(HttpStatus.LOCKED, "Account is locked. Please reset password."));
+            return ResponseEntity.status(HttpStatus.LOCKED).body(response);
+        }
+
+        boolean verified = otpService.verifyOtp(email, otp);
+        if (!verified && user.getTwoFactorOtp() != null && user.getTwoFactorOtp().equals(otp != null ? otp.trim() : "")) {
+            if (user.getTwoFactorOtpExpiry() != null && user.getTwoFactorOtpExpiry().isAfter(java.time.LocalDateTime.now())) {
+                verified = true;
+            }
+        }
+
+        if (!verified) {
+            response.setError(new ErrorDetails(HttpStatus.BAD_REQUEST, "Invalid or expired OTP"));
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        user.setFailedLoginAttempts(0);
+        user.setTwoFactorOtp(null);
+        userLoginRepository.save(user);
+
+        String token = jwtUtil.generateToken(email, "User");
+        response.setData(token);
+        return ResponseEntity.ok(response);
     }
-
-    String token = jwtUtil.generateToken(email,"User");
-
-    response.setData(token);
-    return ResponseEntity.ok(response);
-}
 
     public ResponseEntity<?> forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
@@ -146,28 +227,41 @@ public class UserService {
         user.setTokenExpiry(LocalDateTime.now().plusMinutes(15)); // 15-min expiration
         userRepository.save(user);
 
+        // Also trigger OTP email for password retrieval
+        try {
+            otpService.sendOtp(email);
+        } catch (Exception e) {
+            log.warn("Forgot password email dispatch failed: {}", e.getMessage());
+        }
+
         return ResponseEntity.ok("Reset token generated: " + token);
     }
 
     public ResponseEntity<?> resetPassword(String token, String newPassword) {
-
         User user = userRepository.findByResetToken(token);
 
         if (user == null) {
             return ResponseEntity.status(400).body("Invalid token");
         }
 
-        if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getTokenExpiry() != null && user.getTokenExpiry().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(400).body("Token expired");
         }
-        UserLogin userLogin = new UserLogin();
 
-        userLogin.setPassword(passwordEncoder.encode(newPassword));
+        // Update password and unlock account in UserLogin
+        UserLogin userLogin = userLoginRepository.findByEmail(user.getEmail()).orElse(null);
+        if (userLogin != null) {
+            userLogin.setPassword(passwordEncoder.encode(newPassword));
+            userLogin.setAccountLocked(false); // UNLOCK
+            userLogin.setFailedLoginAttempts(0); // RESET
+            userLoginRepository.save(userLogin);
+        }
+
         user.setResetToken(null);
         user.setTokenExpiry(null);
-
         userRepository.save(user);
-        return ResponseEntity.ok("Password reset successful!");
+
+        return ResponseEntity.ok("Password reset successful! Your account is now unlocked.");
     }
 
     public ResponseEntity<Response> changePassword(String email, ChangePasswordDto dto) {

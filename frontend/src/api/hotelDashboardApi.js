@@ -15,12 +15,10 @@ const BASE_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/ap
 // ✅ Update Profile API
 // ✅ ADD HERE (TOP LEVEL)
 const getAuthHeader = () => {
-  const token =
-    localStorage.getItem("hotelToken") ||
-    localStorage.getItem("token");
+  const token = localStorage.getItem("hotelToken");
 
   if (!token) {
-    throw new Error("No token found");
+    throw new Error("No hotel token found");
   }
 
   return {
@@ -30,12 +28,12 @@ const getAuthHeader = () => {
   };
 };
 
-// ✅ Get Hotel Profile
+// Get Hotel Profile
 export const getHotelProfile = async () => {
   return axios.get(`${BASE_URL}/hotelprofile`, getAuthHeader());
 };
 
-// ✅ USE IT HERE
+// Update Hotel Profile
 export const updateHotelProfile = async (data) => {
   return axios.put(
     `${BASE_URL}/update-profile`,
@@ -45,9 +43,7 @@ export const updateHotelProfile = async (data) => {
 };
 
 export const getDashboardStats = async () => {
-  const token =
-    localStorage.getItem("hotelToken") ||
-    localStorage.getItem("token");
+  const token = localStorage.getItem("hotelToken");
 
   return axios.get(
     `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/hotellogindashboard/dashboard-stats`,

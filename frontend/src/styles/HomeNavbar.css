@@ -1,155 +1,446 @@
+/* ==========================================================================
+   OFFICIAL HOMENAVBAR STYLES
+   ========================================================================== */
+
 .nav {
   width: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  height: 75px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  height: 72px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.nav-container {
+  max-width: 1350px;
+  margin: 0 auto;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  font-family: 'Inter', sans-serif;
+  padding: 0 1.5rem;
 }
 
+/* Left Section: Logo & Nav Links */
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 2.2rem;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.75rem;
   text-decoration: none;
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: #0f172a;
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease;
+  white-space: nowrap;
 }
 
 .logo:hover {
   transform: scale(1.02);
 }
 
+.app-logo-wrapper {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #ffffff 68%, #e2e8f0 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1.5px rgba(255, 255, 255, 0.4);
+  padding: 1.5px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.app-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+  z-index: 2;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover .app-logo-img {
+  transform: rotate(6deg) scale(1.05);
+}
+
+/* 🔄 30-Second Border Reflection Light Sweep (starts on app refresh / initial load) */
+.app-logo-border-sweep {
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 270deg,
+    rgba(56, 189, 248, 0.3) 300deg,
+    rgba(56, 189, 248, 0.95) 335deg,
+    #ffffff 350deg,
+    rgba(56, 189, 248, 0.95) 355deg,
+    transparent 360deg
+  );
+  animation: borderReflection 30s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Diagonal glint across the logo face every 30 seconds */
+.app-logo-wrapper::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -150%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 30%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(56, 189, 248, 0.6) 70%,
+    transparent 100%
+  );
+  transform: rotate(28deg);
+  animation: logoFaceReflect 30s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 3;
+  pointer-events: none;
+}
+
+@keyframes borderReflection {
+  0% {
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+  7% {
+    transform: rotate(360deg);
+    opacity: 1;
+  }
+  8% {
+    transform: rotate(360deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes logoFaceReflect {
+  0% {
+    left: -150%;
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  6% {
+    left: 200%;
+    opacity: 1;
+  }
+  7% {
+    left: 200%;
+    opacity: 0;
+  }
+  100% {
+    left: 200%;
+    opacity: 0;
+  }
+}
+
+.brand-text-block {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-text {
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, #38bdf8 60%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 💎 Secret "NG-T" Insignia with 15-Second High-Gloss Reflection */
+.ngt-secret-badge {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 1.5px 5.5px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.4) 0%,
+    rgba(56, 189, 248, 0.75) 30%,
+    #ffffff 50%,
+    rgba(56, 189, 248, 0.75) 70%,
+    rgba(148, 163, 184, 0.4) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  animation: ngtReflect 15s ease-in-out infinite;
+  cursor: default;
+  user-select: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.ngt-secret-badge:hover {
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+@keyframes ngtReflect {
+  0% {
+    background-position: 100% 0;
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+  8% {
+    background-position: 0% 0;
+    border-color: rgba(56, 189, 248, 0.9);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+  }
+  12% {
+    background-position: -100% 0;
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+  100% {
+    background-position: -100% 0;
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+
 .header-links {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 0.5rem;
 }
 
 .header-links a {
   text-decoration: none;
-  font-size: 0.95rem;
-  color: #475569;
+  font-size: 0.9rem;
+  color: #cbd5e1;
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.header-links a:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #38bdf8;
+}
+
+.header-links a.active {
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* Right Section: Auth Options & Profile */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Hotel Partner Button */
+.hotel-partner-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  padding: 7px 13px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hotel-partner-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+/* Admin Link */
+.admin-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.admin-nav-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ffffff;
+}
+
+/* Divider */
+.nav-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 4px;
+}
+
+/* User Login & Signup */
+.user-login-btn {
+  text-decoration: none;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
-.header-links a:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
+.user-login-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.5);
 }
 
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* AI Assistant Button */
-.ai-assistant-btn {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+.user-signup-btn {
+  text-decoration: none;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
   transition: all 0.2s ease;
 }
 
-.ai-assistant-btn:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.3);
-  transform: translateY(-1px);
-}
-
-/* Auth Buttons */
-.auth-buttons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.login-nav-btn {
-  text-decoration: none;
-  color: #475569;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 10px 20px;
-  transition: color 0.2s ease;
-}
-
-.login-nav-btn:hover {
-  color: #0f172a;
-}
-
-.register-nav-btn {
-  text-decoration: none;
-  background-color: #0f172a;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.register-nav-btn:hover {
-  background-color: #1e293b;
+.user-signup-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
   transform: translateY(-1px);
 }
 
 /* Profile Dropdown Button */
 .profile-btn {
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 8px 16px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #334155;
+  gap: 9px;
   transition: all 0.2s ease;
 }
 
 .profile-btn:hover {
-  background-color: #e2e8f0;
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #0f172a;
 }
 
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
 .profile-email {
-  font-size: 0.9rem;
-  max-width: 120px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.role-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-user {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+}
+
+.role-hotel {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+.role-admin {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.dropdown-arrow {
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu Container */
 .dropdown {
   position: relative;
 }
@@ -157,89 +448,147 @@
 .dropdown-menu {
   position: absolute;
   right: 0;
-  top: 50px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  width: 200px;
+  top: calc(100% + 10px);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 220px;
   border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
   padding: 8px 0;
   display: flex;
   flex-direction: column;
-  z-index: 100;
-  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1100;
+  animation: navSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dropdown-menu a, .dropdown-menu button {
+.dropdown-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-header-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dropdown-header-email {
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-header-role {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.dropdown-item {
   padding: 10px 16px;
   text-decoration: none;
-  color: #475569;
-  font-size: 0.9rem;
+  color: #cbd5e1;
+  font-size: 0.88rem;
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 10px;
-  text-align: left;
   background: none;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  font-family: inherit;
+  box-sizing: border-box;
+  text-align: left;
 }
 
-.dropdown-menu a:hover, .dropdown-menu button:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #38bdf8;
 }
 
-.dropdown-menu .logout-btn {
-  border-top: 1px solid #f1f5f9;
-  color: #ef4444;
+.dropdown-item.logout-btn {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f87171;
   margin-top: 4px;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
-.dropdown-menu .logout-btn:hover {
-  background-color: #fef2f2;
-  color: #dc2626;
+.dropdown-item.logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
 }
 
-/* Mobile Toggle */
+/* Mobile Menu Toggle */
 .mobile-menu-toggle {
   display: none;
   background: none;
   border: none;
-  color: #334155;
+  color: #e2e8f0;
   cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
 }
 
-/* Keyframes */
-@keyframes slideDown {
+.mobile-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes navSlideDown {
   from {
-    transform: translateY(-8px);
     opacity: 0;
+    transform: translateY(-8px);
   }
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Responsive Navbar */
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .nav-left {
+    gap: 1.5rem;
+  }
+  
+  .header-links a {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 900px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .header-links {
     display: none;
-    position: absolute;
-    top: 75px;
+    position: fixed;
+    top: 72px;
     left: 0;
     width: 100%;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+    height: calc(100vh - 72px);
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     flex-direction: column;
-    padding: 20px 0;
-    gap: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    align-items: stretch;
+    padding: 1.5rem;
+    gap: 0.75rem;
+    overflow-y: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .header-links.mobile-active {
@@ -247,15 +596,82 @@
   }
 
   .header-links a {
-    width: 90%;
-    text-align: center;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
   }
 
-  .mobile-menu-toggle {
-    display: block;
-  }
-  
-  .ai-assistant-btn span {
+  .auth-nav-group {
     display: none;
+  }
+
+  /* Mobile Auth Section Inside Drawer */
+  .mobile-auth-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .mobile-auth-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .mobile-group-title {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .mobile-button-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-user-login, .btn-user-register,
+  .btn-hotel-portal, .btn-hotel-register,
+  .btn-admin-portal {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .btn-user-login {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+  }
+
+  .btn-user-register {
+    background: #0284c7;
+    color: #ffffff;
+  }
+
+  .btn-hotel-portal {
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    color: #d8b4fe;
+  }
+
+  .btn-hotel-register {
+    background: #7c3aed;
+    color: #ffffff;
+  }
+
+  .btn-admin-portal {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
   }
 }

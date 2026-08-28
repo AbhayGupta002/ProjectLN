@@ -140,4 +140,12 @@ public class TourGuideService {
         return tourGuideRepository.findByAvailableTrue();
     }
 
+    // Match Guides by City, Language, and Max Price
+    public List<TourGuide> matchGuides(String city, String language, Double maxPrice) {
+        return tourGuideRepository.matchGuides(
+                (city != null && !city.isBlank()) ? city.trim() : null,
+                (language != null && !language.isBlank()) ? language.trim() : null,
+                maxPrice
+        );
+    }
 }

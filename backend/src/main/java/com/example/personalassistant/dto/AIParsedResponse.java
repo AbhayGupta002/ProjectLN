@@ -21,8 +21,11 @@ public class AIParsedResponse {
     private String phoneNumber;
     private Integer budget;
     private String chatResponse;
-    private String calculation;
     private int days;
     private String message;
-
+    private String calculation;
+    private String origin;
+    private String source;
+    private String currency;
+    private String language;
 }

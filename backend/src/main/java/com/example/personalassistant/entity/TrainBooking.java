@@ -10,7 +10,11 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "train_booking")
+@Table(name = "train_booking", indexes = {
+        @Index(name = "idx_tb_user_id", columnList = "userId"),
+        @Index(name = "idx_tb_train_id", columnList = "trainId"),
+        @Index(name = "idx_tb_train_status", columnList = "bookingStatus")
+})
 public class TrainBooking {
 
     @Id
@@ -46,6 +50,9 @@ public class TrainBooking {
     private PaymentStatus paymentStatus;
 
     private LocalDateTime bookingDate;
+
+    @Version
+    private Long version;
 
     public TrainBooking() {
     }

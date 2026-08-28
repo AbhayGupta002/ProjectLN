@@ -14,7 +14,12 @@ import com.example.personalassistant.enums.AccountEnum;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "hotels")
+@Table(name = "hotels", indexes = {
+        @Index(name = "idx_hotel_city", columnList = "city"),
+        @Index(name = "idx_hotel_status", columnList = "status"),
+        @Index(name = "idx_hotel_name", columnList = "hotel"),
+        @Index(name = "idx_hotel_location", columnList = "hotellocation")
+})
 public class Hotel {
 
     @Id
@@ -67,4 +72,7 @@ public class Hotel {
 
     @Column(name = "hotellocation")
     private String location;
+
+    @Version
+    private Long version;
 }

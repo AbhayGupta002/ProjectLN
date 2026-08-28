@@ -42,7 +42,7 @@ public class TourPackageService {
     private TourPackageRepository tourPackageRepository;
 
     // Create a new tour package
-    @Cacheable(value = "dashboardCache", key = "#email")
+    @CacheEvict(value = {"toursCache", "dashboardCache"}, allEntries = true)
     public ResponseEntity<Response> createPackage(String email, TourPackageDTO dto) {
 
         Response response = new Response();
@@ -143,6 +143,7 @@ public class TourPackageService {
     }
 
     // Update package
+    @CacheEvict(value = {"toursCache", "dashboardCache"}, allEntries = true)
     public TourPackage updatePackage(Long id, TourPackage updatedPackage) {
         TourPackage existing = getPackageById(id);
 
@@ -157,6 +158,7 @@ public class TourPackageService {
     }
 
     // Delete package
+    @CacheEvict(value = {"toursCache", "dashboardCache"}, allEntries = true)
     public ResponseEntity<Response> deletePackage(Long id, String email, String password) {
 
         Response response = new Response();

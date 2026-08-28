@@ -43,9 +43,7 @@ function HotelLoginDashboard() {
     imageUrl: "",
   });
 
-  const token =
-    localStorage.getItem("hotelToken") ||
-    localStorage.getItem("token");
+  const token = localStorage.getItem("hotelToken");
 
   // 🔐 Redirect if not logged in
   useEffect(() => {
@@ -166,7 +164,9 @@ function HotelLoginDashboard() {
 
           <li
             onClick={() => {
-              localStorage.clear();
+              localStorage.removeItem("hotelToken");
+              localStorage.removeItem("role");
+              localStorage.removeItem("email");
               navigate("/hotel-login");
             }}
           >

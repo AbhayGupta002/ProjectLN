@@ -17,6 +17,11 @@ export const loginUser = async (credentials) => {
   return response.data;
 };
 
+export const verify2fa = async (email, otp) => {
+  const response = await axios.post(`${API_URL}/verify-2fa`, { email, otp });
+  return response.data;
+};
+
 export const registerHotel = async (hotelData) => {
   const response = await axios.post(`${API_URL}/hotelregister`, hotelData);
   return response.data;

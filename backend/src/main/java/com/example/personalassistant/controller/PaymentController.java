@@ -9,7 +9,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = "*")
 public class PaymentController {
 
     @Autowired
@@ -24,6 +23,33 @@ public class PaymentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Order creation failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-booking-order")
+    public ResponseEntity<?> createBookingOrder(
+            @RequestParam String bookingType,
+            @RequestParam Long bookingId,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            String email = authentication != null ? authentication.getName() : "user";
+            Map<String, Object> orderDetails = paymentService.createBookingOrder(bookingType, bookingId, email);
+            return ResponseEntity.ok(orderDetails);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-booking")
+    public ResponseEntity<?> verifyBooking(
+            @RequestBody PaymentVerifyRequestDto request,
+            @RequestParam(required = false, defaultValue = "HOTEL") String bookingType) {
+        boolean isValid = paymentService.verifyAndSyncPayment(request, bookingType);
+        if (isValid) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Payment verified and booking confirmed"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Invalid payment signature"));
         }
     }
 

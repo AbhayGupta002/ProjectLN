@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { searchByLocation, searchTourByDays } from "../api/publicApi";
 import axios from "axios";
 import HomeNavbar from "../components/HomeNavbar";
+import Footer from "../components/Footer";
+import AIChatModal from "../components/AIChatModal";
 import { Plane, Train, Bus, Hotel, Search, Star, Award, Shield, Wifi, Coffee, MapPin, Calendar } from "lucide-react";
 import "../styles/HomePage.css";
 
 function HomePage() {
   const navigate = useNavigate();
+  const [openAI, setOpenAI] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
   // Active Tab: hotel, flight, bus, train
@@ -94,6 +97,13 @@ function HomePage() {
       <section className="hero">
         <h1>Simplify Your Next Journey</h1>
         <p>Book luxury stays, flights, buses, and trains at the best guaranteed rates</p>
+
+        {/* AI Travel Assistant Prompt Strip */}
+        <div className="hero-ai-strip" onClick={() => setOpenAI(true)}>
+          <span className="hero-ai-badge">✨ AI Travel Assistant</span>
+          <span className="hero-ai-text">Plan your multi-modal trip with hotels, transit & budget</span>
+          <button className="hero-ai-btn" onClick={(e) => { e.stopPropagation(); setOpenAI(true); }}>Ask AI →</button>
+        </div>
 
         {/* Tabbed Search Panel */}
         <div className="search-container">
@@ -298,10 +308,11 @@ function HomePage() {
         </div>
       </section>
 
-      <footer className="footer">
-        <p>© 2026 LuxNes Travel platform | All Rights Reserved</p>
-        <p>Email: support@luxnestravel.com</p>
-      </footer>
+      {/* AI Chat Modal */}
+      {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
+
+      {/* Branded NEXTGEM-TECHNOLOGY Footer */}
+      <Footer />
     </div>
   );
 }

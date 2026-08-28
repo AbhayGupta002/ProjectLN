@@ -21,6 +21,15 @@ public class TourPackageController {
     @Autowired
     private TourPackageService tourPackageService;
 
+    @Autowired
+    private com.example.personalassistant.repository.TourPackageRepository tourPackageRepository;
+
+    // ------------------ PUBLIC GET TOURS ------------------
+    @GetMapping
+    public ResponseEntity<?> getPublicTours() {
+        return ResponseEntity.ok(tourPackageRepository.findAll());
+    }
+
     // ------------------ CREATE PACKAGE ------------------
     @PostMapping("/create")
     public ResponseEntity<?> createPackage(

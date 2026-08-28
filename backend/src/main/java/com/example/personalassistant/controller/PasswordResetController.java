@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:3000")
 public class PasswordResetController {
     @Autowired
     private PasswordResetService resetService;

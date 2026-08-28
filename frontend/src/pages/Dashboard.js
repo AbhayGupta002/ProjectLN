@@ -7,8 +7,9 @@ import { getUserBusBookings, cancelBusBooking } from "../api/busBookingApi";
 import { getUserTrainBookings, cancelTrainBooking } from "../api/trainBookingApi";
 import "../styles/Dashboard.css";
 import AIChatModal from "../components/AIChatModal";
+import Footer from "../components/Footer";
 
-const API_BASE = process.env.REACT_APP_API_URL || `${process.env.REACT_APP_API_URL || "http://localhost:8080"}`;
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 function Dashboard() {
   const [openPanel, setOpenPanel] = useState("overview"); 
@@ -674,6 +675,7 @@ function Dashboard() {
       </main>
 
       {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
+      <Footer />
     </div>
   );
 }

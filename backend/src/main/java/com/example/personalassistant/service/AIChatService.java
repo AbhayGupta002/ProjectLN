@@ -14,32 +14,22 @@ public class AIChatService {
     @Autowired
     private MongoService mongoService;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private com.example.personalassistant.service.ai.AIModelService aiModelService;
 
     public String getAIResponse(String userMessage) {
-
-        String url = "http://localhost:11434/api/generate";
-
-        // Request body
-        Map<String, Object> body = new HashMap<>();
-        body.put("model", "llama3");
-        body.put("prompt", userMessage);
-        body.put("stream", false); // important
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(body, headers);
-
         try {
-            ResponseEntity<Map> response =
-                    restTemplate.postForEntity(url, request, Map.class);
+            String answer = aiModelService.generate(
+                    "You are LuxNes AI Travel Assistant. Provide helpful, conversational responses about destinations, trips, and reservations.",
+                    userMessage
+            );
+            if (answer == null || answer.isBlank()) {
+                answer = "Hello! I am your AI Travel Assistant. How can I help you plan your travel or stay today?";
+            }
             mongoService.saveAiChat(userMessage);
-            return response.getBody().get("response").toString();
-
+            return answer;
         } catch (Exception e) {
-            return "⚠️ Ollama error: " + e.getMessage();
+            return "I am currently assisting many travelers. Please let me know where you'd like to travel!";
         }
     }
 }

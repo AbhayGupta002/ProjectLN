@@ -15,9 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
 @Service
 public class AIService {
 
@@ -45,13 +42,14 @@ public class AIService {
     @Autowired
     private MongoService mongoService;
 
-    private final WebClient webClient;
+    @Autowired
+    private com.example.personalassistant.service.ai.AIModelService aiModelService;
 
-    public AIService() {
-        this.webClient = WebClient.builder()
-                .baseUrl("http://localhost:11434")
-                .build();
-    }
+    @Autowired
+    private com.example.personalassistant.service.ai.AIToolOrchestrator toolOrchestrator;
+
+    @Autowired
+    private com.example.personalassistant.service.ai.SmartTripPlannerService tripPlannerService;
 
     public ResponseEntity<?> processPrompt(
             String userPrompt,
@@ -71,36 +69,25 @@ public class AIService {
                 .format(DateTimeFormatter.ofPattern("dd MMMM yyyy"));
 
         try {
-
             String context = memoryService.getContext(sessionId);
-
             String systemPrompt = getRolePrompt(safeRole);
 
-            String prompt = systemPrompt + """
-
+            String prompt = String.format("""
 Today's date: %s
 
-Conversation so far:
+Conversation Context:
 %s
 
-User: %s
-""".formatted(todayDate, context, userPrompt);
+User Request: %s
+""", todayDate, context, userPrompt);
 
-            Map<String, Object> body = new HashMap<>();
-            body.put("model", "llama3");
-            body.put("prompt", prompt);
-            body.put("stream", false);
+            String aiResponse = aiModelService.generate(systemPrompt, prompt);
 
-            String aiResponse = webClient.post()
-                    .uri("/api/generate")
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            if (aiResponse == null || aiResponse.isBlank()) {
+                return ResponseEntity.ok("I am experiencing high traffic right now. How can I assist you with your booking or trip?");
+            }
 
-            JsonNode root = objectMapper.readTree(aiResponse);
-
-            String aiText = root.path("response").asText()
+            String aiText = aiResponse
                     .replace("```json", "")
                     .replace("```", "")
                     .trim();
@@ -108,21 +95,28 @@ User: %s
             int start = aiText.indexOf("{");
             int end = aiText.lastIndexOf("}") + 1;
 
-            if (start == -1 || end == -1) {
-                return ResponseEntity.ok(aiText);
+            AIParsedResponse parsed;
+            if (start != -1 && end != -1) {
+                aiText = aiText.substring(start, end);
+                try {
+                    parsed = objectMapper.readValue(aiText, AIParsedResponse.class);
+                } catch (Exception e) {
+                    parsed = new AIParsedResponse();
+                    parsed.setIntent("CHAT");
+                    parsed.setMessage(aiText);
+                }
+            } else {
+                parsed = new AIParsedResponse();
+                parsed.setIntent("CHAT");
+                parsed.setMessage(aiText);
             }
-
-            aiText = aiText.substring(start, end);
-
-            AIParsedResponse parsed =
-                    objectMapper.readValue(aiText, AIParsedResponse.class);
 
             if (parsed.getIntent() == null || parsed.getIntent().isBlank()) {
                 parsed.setIntent("CHAT");
             }
 
             if (parsed.getMessage() == null || parsed.getMessage().isBlank()) {
-                parsed.setMessage("I'm here to help you 😊");
+                parsed.setMessage("I'm here to help you navigate your journey 😊");
             }
 
             memoryService.save(sessionId, userPrompt, parsed.getMessage());
@@ -138,14 +132,55 @@ User: %s
                     new HashMap<>();
 
             router.put("CHAT", p -> ResponseEntity.ok(p.getMessage()));
-
             router.put("ASK_DETAILS", p -> ResponseEntity.ok(p.getMessage()));
 
+            // Smart Trip Planner
+            router.put("PLAN_TRIP", p -> {
+                String dest = p.getLocation() != null ? p.getLocation() : p.getCity();
+                String orig = p.getOrigin() != null ? p.getOrigin() : p.getSource();
+                Double bud = p.getBudget() != null ? p.getBudget().doubleValue() : null;
+                var plan = tripPlannerService.planTrip(dest, orig, p.getDays(), bud, p.getCurrency());
+                return ResponseEntity.ok(plan);
+            });
+
+            // Hotels
             router.put("SEARCH_HOTEL", p -> {
-                if (p.getLocation() == null || p.getLocation().isBlank()) {
-                    return ResponseEntity.ok("Which city are you looking for? 😊");
-                }
-                return hotelService.searchTourByLocation(p.getLocation());
+                String q = p.getLocation() != null ? p.getLocation() : p.getCity();
+                return ResponseEntity.ok(toolOrchestrator.searchHotels(q));
+            });
+
+            // Flights
+            router.put("SEARCH_FLIGHT", p -> {
+                String src = p.getSource() != null ? p.getSource() : p.getOrigin();
+                String dst = p.getLocation() != null ? p.getLocation() : p.getCity();
+                return ResponseEntity.ok(toolOrchestrator.searchFlights(src, dst));
+            });
+
+            // Trains
+            router.put("SEARCH_TRAIN", p -> {
+                String src = p.getSource() != null ? p.getSource() : p.getOrigin();
+                String dst = p.getLocation() != null ? p.getLocation() : p.getCity();
+                return ResponseEntity.ok(toolOrchestrator.searchTrains(src, dst));
+            });
+
+            // Buses
+            router.put("SEARCH_BUS", p -> {
+                String src = p.getSource() != null ? p.getSource() : p.getOrigin();
+                String dst = p.getLocation() != null ? p.getLocation() : p.getCity();
+                return ResponseEntity.ok(toolOrchestrator.searchBuses(src, dst));
+            });
+
+            // Cabs
+            router.put("SEARCH_CAB", p -> {
+                String c = p.getLocation() != null ? p.getLocation() : p.getCity();
+                return ResponseEntity.ok(toolOrchestrator.searchCabs(c));
+            });
+
+            // Tour Guides
+            router.put("FIND_GUIDE", p -> {
+                String c = p.getLocation() != null ? p.getLocation() : p.getCity();
+                Double maxP = p.getBudget() != null ? p.getBudget().doubleValue() : null;
+                return ResponseEntity.ok(toolOrchestrator.findGuides(c, p.getLanguage(), maxP));
             });
 
             router.put("BOOK_HOTEL", p -> {
@@ -159,30 +194,20 @@ User: %s
             });
 
             router.put("SEARCH_TOUR", p -> {
-                if (p.getDays() != 0 && p.getDays() > 0) {
-                    return publicService.getToursByDays(p.getDays());
-                }
-                return ResponseEntity.ok("How many days trip are you planning? 😊");
+                return ResponseEntity.ok(toolOrchestrator.searchTours(p.getLocation(), "asc"));
             });
 
             router.put("LOCATION_WISE_TOUR", p -> {
-                if (p.getLocation() == null) {
-                    return ResponseEntity.ok("Which location?");
-                }
-                return publicService.getToursByLocation(
-                        p.getLocation(),
-                        p.getLocation()
-                );
+                return ResponseEntity.ok(toolOrchestrator.searchTours(p.getLocation(), "asc"));
             });
 
-            router.put("SHOW_TOURS",
-                    p -> tourBookingService.getAllTours());
+            router.put("SHOW_TOURS", p -> tourBookingService.getAllTours());
 
             router.put("SHOW_MY_BOOKINGS", p -> {
                 if (!"USER".equalsIgnoreCase(safeRole) || email == null) {
                     return ResponseEntity.ok("🔒 Please login to view bookings.");
                 }
-                return bookingService.getUserBookings(email);
+                return ResponseEntity.ok(toolOrchestrator.getUserBookings(email));
             });
 
             router.put("CANCEL_BOOKING", p -> {
@@ -196,18 +221,15 @@ User: %s
             });
 
             router.put("CALCULATE", p -> {
-                try {
-                    ScriptEngine engine =
-                            new ScriptEngineManager()
-                                    .getEngineByName("JavaScript");
-
-                    Object result = engine.eval(p.getCalculation());
-
-                    return ResponseEntity.ok("Result: " + result);
-
-                } catch (Exception e) {
-                    return ResponseEntity.ok("Invalid calculation.");
+                String expr = p.getCalculation();
+                if (expr == null || expr.isBlank()) {
+                    return ResponseEntity.ok("No calculation provided.");
                 }
+                // Allow only numbers and arithmetic symbols
+                if (!expr.matches("^[0-9+\\-*/.()\\s]+$")) {
+                    return ResponseEntity.badRequest().body("Calculation contains invalid characters.");
+                }
+                return ResponseEntity.ok("Calculated: " + expr);
             });
 
             Function<AIParsedResponse, ResponseEntity<?>> action =
@@ -230,116 +252,68 @@ User: %s
     private String getRolePrompt(String role) {
 
         return switch (role) {
-
-
             case "ADMIN" -> """
-You are an admin assistant.
-
-You can:
-- View all bookings
-- Manage hotels
-
-Be direct.
-
-Return JSON:
- {
-                     "intent": "CHAT | SEARCH_HOTEL | BOOK_HOTEL | SEARCH_TOUR | SHOW_TOURS | LOCATION_WISE_TOUR | SHOW_MY_BOOKINGS | CANCEL_BOOKING | CALCULATE | ASK_DETAILS",
-                     "message": "string",
-                     "location": "string or null",
-                     "hotelName": "string or null",
-                     "date": "string or null",
-                     "days": number or null,
-                     "bookingId": number or null,
-                     "userId": number or null,
-                     "email": "string or null",
-                     "calculation": "string or null"
-                    }
-                    
-                    Rules:
-                    - If missing info → ASK_DETAILS
-                    - If booking → BOOK_HOTEL
-                    - If search → SEARCH_HOTEL or SEARCH_TOUR
-                    - Always fill message
+You are an admin AI assistant for the travel and hotel platform.
+Return ONLY valid JSON matching this schema:
+{
+  "intent": "CHAT | PLAN_TRIP | SEARCH_HOTEL | BOOK_HOTEL | SEARCH_FLIGHT | SEARCH_TRAIN | SEARCH_BUS | SEARCH_CAB | FIND_GUIDE | SEARCH_TOUR | SHOW_TOURS | SHOW_MY_BOOKINGS | CANCEL_BOOKING | ASK_DETAILS",
+  "message": "Friendly response summary",
+  "location": "Destination city or null",
+  "origin": "Departure city or null",
+  "hotelName": "string or null",
+  "date": null,
+  "days": number or null,
+  "budget": number or null,
+  "currency": "INR | USD | EUR | GBP",
+  "language": "string or null"
+}
 """;
 
             case "USER" -> """
-You are a smart, friendly travel assistant.
+You are LuxNes Smart Travel Concierge.
+You help travelers search hotels, flights, trains, buses, cabs, tour guides, and plan comprehensive itineraries.
 
-- Talk naturally
-- Ask follow-up questions
-- Help step-by-step
+Rules:
+- When user says "I want to go to X" or asks for a trip plan or itinerary, set intent: "PLAN_TRIP".
+- If user asks for flights -> "SEARCH_FLIGHT"
+- If user asks for trains -> "SEARCH_TRAIN"
+- If user asks for buses -> "SEARCH_BUS"
+- If user asks for cabs/taxis -> "SEARCH_CAB"
+- If user asks for guides -> "FIND_GUIDE"
+- If user asks for hotels -> "SEARCH_HOTEL"
+- If user asks for bookings -> "SHOW_MY_BOOKINGS"
+- Never fabricate inventory prices or availability; return intent with extracted parameters so real inventory is retrieved from the database.
 
-Return JSON:
- {
-                     "intent": "CHAT | SEARCH_HOTEL | BOOK_HOTEL | SEARCH_TOUR | SHOW_TOURS | LOCATION_WISE_TOUR | SHOW_MY_BOOKINGS | CANCEL_BOOKING | CALCULATE | ASK_DETAILS",
-                     "message": "string",
-                     "location": "string or null",
-                     "hotelName": "string or null",
-                     "date": "string or null",
-                     "days": number or null,
-                     "bookingId": number or null,
-                     "userId": number or null,
-                     "email": "string or null",
-                     "calculation": "string or null"
-                    }
-                    
-                    Rules:
-                    - If missing info → ASK_DETAILS
-                    - If booking → BOOK_HOTEL
-                    - If search → SEARCH_HOTEL or SEARCH_TOUR
-                    - Always fill message
+Return ONLY valid JSON:
+{
+  "intent": "PLAN_TRIP | SEARCH_HOTEL | BOOK_HOTEL | SEARCH_FLIGHT | SEARCH_TRAIN | SEARCH_BUS | SEARCH_CAB | FIND_GUIDE | SEARCH_TOUR | SHOW_TOURS | SHOW_MY_BOOKINGS | CANCEL_BOOKING | CHAT | ASK_DETAILS",
+  "message": "Friendly message explaining what was found or asking missing details",
+  "location": "Destination city name or null",
+  "origin": "Departure city name or null",
+  "hotelName": "string or null",
+  "date": null,
+  "days": number or null,
+  "budget": number or null,
+  "currency": "INR | USD | EUR | GBP",
+  "language": "string or null"
+}
 """;
 
             default -> """
-You are a public assistant.
-                    String prompt = ""\"
-                    You are a strict AI system.
-                    
-                    You MUST return ONLY valid JSON.
-                    
-                    NO explanation.
-                    NO extra text.
-                    NO markdown.
-                    ONLY JSON.
-                    
-                    If you break format → system will fail.
-                    
-                    FORMAT:
-                    
-                    {
-                     "intent": "CHAT | SEARCH_HOTEL | BOOK_HOTEL | SEARCH_TOUR | SHOW_TOURS | LOCATION_WISE_TOUR | SHOW_MY_BOOKINGS | CANCEL_BOOKING | CALCULATE | ASK_DETAILS",
-                     "message": "string",
-                     "location": "string or null",
-                     "hotelName": "string or null",
-                     "date": "string or null",
-                     "days": number or null,
-                     "bookingId": number or null,
-                     "userId": number or null,
-                     "email": "string or null",
-                     "calculation": "string or null"
-                    }
-                    
-                    Rules:
-                    - If missing info → ASK_DETAILS
-                    - If booking → BOOK_HOTEL
-                    - If search → SEARCH_HOTEL or SEARCH_TOUR
-                    - Always fill message
-                    
-                    User: %s
-Guests can:
-- View hotels
-- View tours
-
-STRICT:
-- DO NOT allow booking
-- Ask user to login for booking
-
-Return JSON:
+You are LuxNes AI Travel Assistant.
+Help guests discover destinations, transport, hotels, and packages.
+Return ONLY valid JSON:
 {
- "intent":"",
- "message":"",
- "location":null,
- "days":null
+  "intent": "PLAN_TRIP | SEARCH_HOTEL | SEARCH_FLIGHT | SEARCH_TRAIN | SEARCH_BUS | SEARCH_CAB | FIND_GUIDE | SEARCH_TOUR | SHOW_TOURS | CHAT | ASK_DETAILS",
+  "message": "Friendly welcome and guidance",
+  "location": "Destination city name or null",
+  "origin": "Departure city name or null",
+  "hotelName": "string or null",
+  "date": null,
+  "days": number or null,
+  "budget": number or null,
+  "currency": "INR | USD | EUR | GBP",
+  "language": "string or null"
 }
 """;
         };

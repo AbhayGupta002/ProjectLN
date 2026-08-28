@@ -36,8 +36,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-
-                        // -------------------- PUBLIC AUTH ENDPOINTS --------------------
+                        // -------------------- PUBLIC AUTH & DISCOVERY --------------------
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
@@ -45,89 +44,58 @@ public class SecurityConfig {
                                 "/api/auth/hotellogin",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
-                                "/api/flights/**",
-                                "/api/flight-bookings/**",
-                                "/api/bus/**",
-                                "/api/bus-bookings/**",
-                                "/api/trains/**",
-                                "/api/train-bookings/**",
-                                "/api/payment/**"
+                                "/api/auth/verify-2fa",
+                                "/api/admin/login",
+                                "/actuator/**",
+                                "/error"
                         ).permitAll()
 
-                        .requestMatchers("/api/chat/**").permitAll()
-
-                        // -------------------- PUBLIC TOUR PACKAGE APIs --------------------WIP
-                                // Public APIs
-                                .requestMatchers("/api/tours",
-                                        "/api/tours/all",
-                                        "/api/tours/{id}").permitAll()
-
-                                // Protected APIs
-                                .requestMatchers("/api/tours/create",
-                                        "/api/tours/update/**",
-                                        "/api/tours/delete/**").hasRole("HOTEL")
-
-
-                                // -------------------- TOUR BOOKING APIS (User Auth Required) --------------------
+                        // -------------------- PUBLIC CATALOGS & SEARCH --------------------
                         .requestMatchers(
-                                "/api/tour-booking/create",
-                                "/api/tour-booking/user/**",
-                                "/api/tour-booking/cancel/**",
-                                "/api/tour-booking/tourbylocation"
+                                "/api/public/**",
+                                "/api/destination",
+                                "/api/destination/**",
+                                "/api/flights",
+                                "/api/flights/**",
+                                "/api/bus",
+                                "/api/bus/**",
+                                "/api/trains",
+                                "/api/trains/**",
+                                "/api/cabs",
+                                "/api/cabs/**",
+                                "/api/tours",
+                                "/api/tours/**",
+                                "/api/tour-booking/tourbylocation",
+                                "/api/chat/**",
+                                "/api/ai/**"
                         ).permitAll()
 
-//                        BookingController APis
-                                .requestMatchers("/api/bookings/bookhotel").hasAnyRole("USER","ADMIN","HOTEL")
-                                .requestMatchers("/api/bookings/getallbookingbyhotel").hasAnyRole("HOTEL","ADMIN")
-                                .requestMatchers("/api/bookings/gettourbooking").hasAnyRole("USER","ADMIN","HOTEL")
-                                .requestMatchers("/api/bookings/getuserbookings").hasAnyRole("USER","ADMIN","HOTEL")
-                                .requestMatchers("/api/bookings/**").hasRole("ADMIN")
+                        // -------------------- ADMIN SECTION --------------------
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // -------------------- HOTEL MANAGEMENT SECTION --------------------
+                        .requestMatchers(
+                                "/api/HotelLoginDashboard/**",
+                                "/api/hotellogindashboard/**",
+                                "/api/tours/create",
+                                "/api/tours/update/**",
+                                "/api/tours/delete/**",
+                                "/api/tour-booking/pending/**"
+                        ).hasRole("HOTEL")
 
-                                // -------------------- USER DASHBOARD (ROLE_USER) --------------------
+                        // -------------------- USER CLIENT DASHBOARD --------------------
                         .requestMatchers("/api/dashboard/**").hasRole("USER")
-                                .requestMatchers("/api/dashboard/get-active-hotel").hasRole("USER")
-                                .requestMatchers("/api/dashboard/disable-account").hasRole("USER")
 
-//                        AI MODULE ADD OLLAMA3
-                                .requestMatchers("/api/ai/prompt").permitAll()
-
-                        // -------------------- HOTEL DASHBOARD (ROLE_HOTEL) --------------------
-                        .requestMatchers("/api/HotelLoginDashboard/**").hasRole("HOTEL")
-                                .requestMatchers(
-                                        "/api/tour-booking/pending/**"
-                                ).hasRole("HOTEL")
-                                .requestMatchers("/api/hotellogindashboard/update-profile").hasRole("HOTEL")
-                                .requestMatchers("/api/tours/create").hasRole("HOTEL")
-
-//                                .requestMatchers("api/payment/**").permitAll() //make this update
-
-//                        @Admin section
-                                .requestMatchers("/api/admin/login", "/api/admin/register").permitAll() // public endpoints
-                                .requestMatchers("/api/admin").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/**").permitAll()
-                                .requestMatchers("/api/admin/hotels/inactive").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/all-users").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/active-hotels").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/hotels").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/search").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/suspend-hotel/id").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/suspend-user/id").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/search").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/prompts").hasRole("ADMIN")
-
-//                        @🔥 PUBLIC APIs
-                                .requestMatchers("/api/public/**").permitAll() // 🔥 PUBLIC APIs
-
-
-//                           @AI AUTOMATED MODULE
-                                .requestMatchers("/api/ai/**").permitAll()
-//                                .requestMatchers("/api/ai/**").permitAll()
-
-
-                        //new things
-                                .requestMatchers("/api/destination/**").permitAll()
-
+                        // -------------------- SECURE BOOKING & PAYMENT TRANSACTIONS --------------------
+                        .requestMatchers(
+                                "/api/bookings/**",
+                                "/api/flight-bookings/**",
+                                "/api/bus-bookings/**",
+                                "/api/train-bookings/**",
+                                "/api/cab-bookings/**",
+                                "/api/tour-booking/**",
+                                "/api/payment/**"
+                        ).hasAnyRole("USER", "HOTEL", "ADMIN")
 
                         // -------------------- ANY OTHER REQUEST → AUTH REQUIRED --------------------
                         .anyRequest().authenticated()

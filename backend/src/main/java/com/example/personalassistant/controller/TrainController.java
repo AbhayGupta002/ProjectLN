@@ -9,13 +9,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/trains")
-@CrossOrigin(origins = "*")
 public class TrainController {
 
     @Autowired
     private TrainService trainService;
 
-    @GetMapping("/all")
+    @GetMapping({"", "/all"})
     public ResponseEntity<Response> getAllTrains() {
         return trainService.getAllTrains();
     }

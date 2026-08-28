@@ -27,4 +27,21 @@ public class UserLogin {
     @Column
     private boolean emailVerified;
 
+    @Column(name = "failed_attempts")
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "account_locked")
+    private boolean accountLocked = false;
+
+    @Column(name = "two_factor_enabled")
+    private boolean twoFactorEnabled = false;
+
+    @Column(name = "two_factor_otp")
+    private String twoFactorOtp;
+
+    @Column(name = "two_factor_expiry")
+    private java.time.LocalDateTime twoFactorOtpExpiry;
+
+    @jakarta.persistence.Version
+    private Long version;
 }

@@ -25,6 +25,24 @@ function AIChatModal({ onClose }) {
   });
 
   const chatEndRef = useRef(null);
+  const modalRef = useRef(null);
+
+  // Handle ESC key press to close modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const handleOverlayClick = (e) => {
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      onClose();
+    }
+  };
 
   // Load theme preference
   useEffect(() => {
@@ -343,8 +361,8 @@ function AIChatModal({ onClose }) {
   };
 
   return (
-    <div className={`ai-modal-overlay ${darkMode ? "dark" : "light"}`}>
-      <div className="ai-modal open">
+    <div className={`ai-modal-overlay ${darkMode ? "dark" : "light"}`} onClick={handleOverlayClick}>
+      <div className="ai-modal open" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         
         {/* HEADER */}
         <div className="ai-header">

@@ -26,6 +26,8 @@ public class TourGuide {
 
     private String languages;
 
+    private String city;
+
     private String specialization;
 
     @Column(length = 3000)

@@ -6,7 +6,10 @@ import jakarta.persistence.*;
 
 @Data
 @Entity
-@Table(name = "flight")
+@Table(name = "flight", indexes = {
+        @Index(name = "idx_flight_route", columnList = "source, destination"),
+        @Index(name = "idx_flight_status", columnList = "status")
+})
 public class Flight {
 
     @Id
@@ -48,4 +51,7 @@ public class Flight {
     private String imageUrl;
 
     private Boolean status = true;
+
+    @Version
+    private Long version;
 }

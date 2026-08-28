@@ -46,9 +46,11 @@ public class User {
 
     // HOTEL BOOKINGS
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Booking> bookings;
 
     // TOUR BOOKINGS ✅
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<TourBooking> tourBookings;
 }
