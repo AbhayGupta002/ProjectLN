@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { User, LogOut, Settings, Shield, Building2, ChevronDown, Menu, X } from "lucide-react";
+import { getInitialTheme, applyTheme, cycleTheme, THEME_CONFIG } from "../utils/theme";
 import "../styles/HomeNavbar.css";
 
 function Navbar() {
@@ -9,11 +10,22 @@ function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
+  const [theme, setTheme] = useState(getInitialTheme());
 
   const profileRef = useRef();
   const hotelRef = useRef();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Initialize theme on mount
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const handleCycleTheme = () => {
+    const next = cycleTheme(theme);
+    setTheme(next);
+  };
 
   // Detect login status from localStorage
   useEffect(() => {
@@ -75,17 +87,17 @@ function Navbar() {
       <div className="nav-container">
         {/* LOGO & PRIMARY LINKS */}
         <div className="nav-left">
-          <Link to="/" className="logo" aria-label="Hotel-LuxNes Home">
+          <Link to="/" className="logo" aria-label="worldtours.com Home">
             <div className="app-logo-wrapper">
               <div className="app-logo-border-sweep"></div>
               <img
                 src="/assets/logo-badge.png"
-                alt="Hotel-LuxNes Logo"
+                alt="worldtours.com Logo"
                 className="app-logo-img"
               />
             </div>
             <div className="brand-text-block">
-              <span className="logo-text">Hotel-LuxNes</span>
+              <span className="logo-text">worldtours.com</span>
               <span className="ngt-secret-badge" title="NextGem-Technology">
                 NG-T
               </span>
@@ -107,6 +119,16 @@ function Navbar() {
             <Link to="/feedback" className={isActive("/feedback") ? "active" : ""}>
               Feedback
             </Link>
+
+            {/* MOBILE THEME SWITCHER */}
+            {mobileMenuOpen && (
+              <div className="mobile-theme-row">
+                <button className="mobile-theme-btn" onClick={handleCycleTheme}>
+                  <span>Theme: {THEME_CONFIG[theme]?.icon} {THEME_CONFIG[theme]?.label}</span>
+                  <span className="mobile-theme-tap">Tap to switch</span>
+                </button>
+              </div>
+            )}
 
             {/* MOBILE ONLY AUTH SECTION */}
             {mobileMenuOpen && !email && (
@@ -134,8 +156,19 @@ function Navbar() {
           </div>
         </div>
 
-        {/* RIGHT SECTION: AUTHENTICATION OPTIONS */}
+        {/* RIGHT SECTION: AUTHENTICATION OPTIONS & THEME TOGGLE */}
         <div className="nav-right">
+          {/* GLOBAL THEME CYCLE BUTTON */}
+          <button
+            className="theme-cycle-nav-btn"
+            onClick={handleCycleTheme}
+            title={`Active Theme: ${THEME_CONFIG[theme]?.label || "Theme"}. Click to cycle: 75% Dark ➔ 50% Light ➔ 25% Light`}
+            aria-label="Cycle theme mode"
+          >
+            <span className="theme-icon">{THEME_CONFIG[theme]?.icon || "🌙"}</span>
+            <span className="theme-label">{THEME_CONFIG[theme]?.label || "75% Dark"}</span>
+          </button>
+
           {email ? (
             /* LOGGED IN PROFILE DROPDOWN */
             <div className="dropdown" ref={profileRef}>

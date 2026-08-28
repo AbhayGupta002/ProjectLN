@@ -13,7 +13,7 @@ const Footer = () => {
               <div className="app-logo-border-sweep"></div>
               <img
                 src="/assets/logo-badge.png"
-                alt="NextGem Hotel-LuxNes Logo"
+                alt="worldtours.com Logo"
                 className="app-logo-img"
               />
             </div>

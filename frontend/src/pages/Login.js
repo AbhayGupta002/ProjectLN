@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { loginUser, verify2fa } from "../api/authApi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Eye, EyeOff, ShieldAlert, Building2, Shield } from "lucide-react";
 import "../styles/Login.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState("");
   const [step2fa, setStep2fa] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [isLocked, setIsLocked] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
 
   const handleAuthSuccess = (token) => {
@@ -32,11 +35,27 @@ function Login() {
     navigate("/dashboard");
   };
 
+  const validateForm = () => {
+    const errs = {};
+    if (!email.trim()) {
+      errs.email = "Email address is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errs.email = "Please enter a valid email address";
+    }
+    if (!password) {
+      errs.password = "Password is required";
+    }
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
     setStatusMsg("");
     setIsLocked(false);
+
+    if (!validateForm()) return;
     setLoading(true);
 
     try {
@@ -58,28 +77,25 @@ function Login() {
       }
 
       // Direct token returned
-      const token = typeof res.data === "string" ? res.data : null;
-      if (!token) {
-        setErrorMsg("Authentication token not received from server");
-        return;
+      const token = typeof res.data === "string" ? res.data : (res.data?.token || res.data);
+      if (token) {
+        handleAuthSuccess(token);
+      } else {
+        setErrorMsg("Unexpected server response format");
       }
-
-      handleAuthSuccess(token);
 
     } catch (err) {
       console.error("Login error:", err);
-      if (err.response?.status === 423) {
+      const status = err.response?.status;
+      const backendError = err.response?.data?.error?.message || err.response?.data?.message;
+
+      if (status === 423 || (backendError && backendError.toLowerCase().includes("locked"))) {
         setIsLocked(true);
-        setErrorMsg(
-          err.response?.data?.error?.message ||
-          "Account locked due to 4 consecutive failed password attempts. Please use Forgot Password to unlock."
-        );
+        setErrorMsg(backendError || "Your account has been temporarily locked due to 4 consecutive failed login attempts.");
+      } else if (status === 401) {
+        setErrorMsg(backendError || "Invalid email or password. Please check your credentials.");
       } else {
-        const msg =
-          err.response?.data?.error?.message ||
-          err.response?.data?.message ||
-          "Invalid email or password";
-        setErrorMsg(msg);
+        setErrorMsg(backendError || "Login failed. Please check your internet connection or try again.");
       }
     } finally {
       setLoading(false);
@@ -89,146 +105,185 @@ function Login() {
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    setLoading(true);
+    setStatusMsg("");
 
+    if (!otp.trim()) {
+      setErrorMsg("Please enter the verification code");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await verify2fa(email, otp);
+      const res = await verify2fa({ email, otp: otp.trim() });
 
       if (res.error) {
-        setErrorMsg(res.error.message || "Invalid or expired OTP");
+        setErrorMsg(res.error.message || "2FA verification failed");
         return;
       }
 
-      const token = typeof res.data === "string" ? res.data : null;
-      if (!token) {
-        setErrorMsg("Token not received upon OTP verification");
-        return;
+      const token = typeof res.data === "string" ? res.data : (res.data?.token || res.data);
+      if (token) {
+        handleAuthSuccess(token);
+      } else {
+        setErrorMsg("Token not received after 2FA verification");
       }
-
-      handleAuthSuccess(token);
-
     } catch (err) {
-      console.error("2FA error:", err);
-      const msg =
-        err.response?.data?.error?.message ||
-        err.response?.data?.message ||
-        "Invalid or expired OTP";
-      setErrorMsg(msg);
+      console.error("2FA Error:", err);
+      setErrorMsg(err.response?.data?.error?.message || err.response?.data?.message || "Invalid or expired OTP code.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-container">
-      {!step2fa ? (
-        <form onSubmit={handleCredentialsSubmit}>
-          <h2>User Login</h2>
+    <div className="auth-page-wrapper">
+      <div className="auth-card">
+        {/* Brand Header */}
+        <div className="auth-header">
+          <div className="auth-brand-badge">
+            <img src="/assets/logo-badge.png" alt="worldtours.com Logo" className="auth-logo-img" />
+            <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>worldtours.com</span>
+          </div>
+          <h2>{!step2fa ? "Traveler Login" : "Two-Factor Verification"}</h2>
+          <p>{!step2fa ? "Sign in to manage your stays and trips" : "Enter the verification code sent to your email"}</p>
+        </div>
 
-          {statusMsg && <p style={{ color: "#38bdf8", fontSize: "14px", marginBottom: "12px" }}>{statusMsg}</p>}
-          {errorMsg && (
-            <div style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", padding: "10px", marginBottom: "14px" }}>
-              <p style={{ color: "#f87171", fontSize: "14px", margin: 0 }}>{errorMsg}</p>
-              {isLocked && (
+        {/* Status / Error Alerts */}
+        {errorMsg && (
+          <div className="auth-alert-error" style={{ marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <ShieldAlert size={18} />
+              <span>{errorMsg}</span>
+            </div>
+            {isLocked && (
+              <div style={{ marginTop: "6px" }}>
+                <Link to="/forgot-password" style={{ color: "#38bdf8", fontWeight: 700 }}>
+                  Unlock via Forgot Password ➔
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {statusMsg && (
+          <div className="auth-alert-info" style={{ marginBottom: "16px" }}>
+            {statusMsg}
+          </div>
+        )}
+
+        {!step2fa ? (
+          /* Step 1: Email & Password */
+          <form onSubmit={handleCredentialsSubmit} className="auth-form" noValidate>
+            <div className="form-group-item">
+              <label className="form-label" htmlFor="user-email">
+                Email Address <span className="form-label-required">*</span>
+              </label>
+              <input
+                id="user-email"
+                type="email"
+                className={`auth-input ${fieldErrors.email ? "input-error" : ""}`}
+                placeholder="e.g. traveler@gmail.com"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: "" }); }}
+                disabled={loading}
+                required
+                autoComplete="email"
+              />
+              {fieldErrors.email && <span className="field-error-text">{fieldErrors.email}</span>}
+            </div>
+
+            <div className="form-group-item">
+              <label className="form-label" htmlFor="user-password">
+                Password <span className="form-label-required">*</span>
+              </label>
+              <div className="password-input-wrapper">
+                <input
+                  id="user-password"
+                  type={showPassword ? "text" : "password"}
+                  className={`auth-input ${fieldErrors.password ? "input-error" : ""}`}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: "" }); }}
+                  disabled={loading}
+                  required
+                  autoComplete="current-password"
+                />
                 <button
                   type="button"
-                  onClick={() => navigate("/forgot-password")}
-                  style={{ marginTop: "8px", padding: "6px 12px", background: "#ef4444", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  Unlock via Forgot Password
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              )}
+              </div>
+              {fieldErrors.password && <span className="field-error-text">{fieldErrors.password}</span>}
             </div>
-          )}
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            <Link to="/forgot-password" className="auth-forgot-link">
+              Forgot your password?
+            </Link>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? "Authenticating..." : "Sign In to Account"}
+            </button>
+          </form>
+        ) : (
+          /* Step 2: 2FA OTP */
+          <form onSubmit={handleOtpSubmit} className="auth-form" noValidate>
+            <div className="form-group-item">
+              <label className="form-label" htmlFor="otp-input">
+                6-Digit Security Code <span className="form-label-required">*</span>
+              </label>
+              <input
+                id="otp-input"
+                type="text"
+                className="auth-input"
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength={6}
+                disabled={loading}
+                autoFocus
+                required
+              />
+              <span className="field-helper-text">Check your inbox for the one-time passcode.</span>
+            </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px", marginTop: "-6px" }}>
-            <span
-              style={{ color: "#38bdf8", cursor: "pointer", fontSize: "13px" }}
-              onClick={() => navigate("/forgot-password")}
-            >
-              Forgot Password?
-            </span>
-          </div>
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? "Verifying OTP..." : "Verify & Complete Login"}
+            </button>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Verifying..." : "Login"}
-          </button>
-
-          <p style={{ marginTop: "15px", fontSize: "15px", color: "#cbd5e1" }}>
-            Don’t have an account?{" "}
-            <span
-              style={{ color: "#38bdf8", cursor: "pointer", fontWeight: 600 }}
-              onClick={() => navigate("/register")}
-            >
-              Register Here
-            </span>
-          </p>
-
-          <div style={{ marginTop: "20px", paddingTop: "15px", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between" }}>
-            <span
-              style={{ color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}
-              onClick={() => navigate("/hotel-login")}
-            >
-              🏨 Hotel Login
-            </span>
-            <span
-              style={{ color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}
-              onClick={() => navigate("/admin-login")}
-            >
-              🛡️ Admin Login
-            </span>
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={handleOtpSubmit}>
-          <h2>Two-Factor Authentication</h2>
-          <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "15px" }}>
-            Enter the 6-digit OTP sent to <strong>{email}</strong>
-          </p>
-
-          {statusMsg && <p style={{ color: "#38bdf8", fontSize: "13px", marginBottom: "12px", background: "rgba(56,189,248,0.1)", padding: "8px", borderRadius: "6px" }}>{statusMsg}</p>}
-          {errorMsg && <p style={{ color: "#f87171", fontSize: "14px", marginBottom: "12px" }}>{errorMsg}</p>}
-
-          <input
-            type="text"
-            placeholder="Enter 6-digit OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            maxLength={6}
-            required
-            autoFocus
-          />
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Verifying OTP..." : "Verify & Complete Login"}
-          </button>
-
-          <p style={{ marginTop: "15px", fontSize: "14px", color: "#94a3b8" }}>
-            <span
-              style={{ color: "#38bdf8", cursor: "pointer" }}
-              onClick={() => { setStep2fa(false); setOtp(""); setErrorMsg(""); setStatusMsg(""); }}
+            <button
+              type="button"
+              className="auth-role-switch-btn"
+              style={{ justifyContent: "center", marginTop: "10px" }}
+              onClick={() => { setStep2fa(false); setErrorMsg(""); setStatusMsg(""); }}
             >
               ← Back to password login
-            </span>
-          </p>
-        </form>
-      )}
+            </button>
+          </form>
+        )}
+
+        {/* Footer Navigation */}
+        <div className="auth-footer-links">
+          <div>
+            Don't have an account?{" "}
+            <Link to="/register" className="auth-link-highlight">
+              Sign Up here
+            </Link>
+          </div>
+
+          <div className="auth-role-switch-row">
+            <Link to="/hotel-login" className="auth-role-switch-btn">
+              <Building2 size={13} /> Hotel Partner
+            </Link>
+            <Link to="/admin-login" className="auth-role-switch-btn">
+              <Shield size={13} /> Admin Portal
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
