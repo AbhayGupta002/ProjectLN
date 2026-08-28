@@ -598,7 +598,7 @@ function Dashboard() {
         <aside className={`user-dashboard-sidebar ${mobileDrawerOpen ? "mobile-open" : ""}`}>
           <div className="sidebar-user-summary">
             <img
-              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${user?.name || "Traveler"}`}
+              src="/assets/logo-badge.png"
               alt="Avatar"
               className="sidebar-avatar"
             />

@@ -201,7 +201,7 @@ function HomePage() {
               {tours.length > 0 ? (
                 tours.map((t, i) => (
                   <div key={i} className="card small">
-                    <img src={t.imageUrl || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"} alt={t.name} style={{ width: "100%", borderRadius: 10, height: 160, objectFit: "cover" }} />
+                    <img src={t.imageUrl || "/assets/logo-badge.png"} alt={t.name} style={{ width: "100%", borderRadius: 10, height: 160, objectFit: "contain", background: "var(--bg-input, rgba(255,255,255,0.1))", padding: 10 }} />
                     <h3 style={{ marginTop: 12 }}>{t.name}</h3>
                     <p style={{ color: "#64748b", margin: "4px 0" }}>{t.destination}</p>
                     <p>{t.duration} Days</p>
@@ -228,7 +228,7 @@ function HomePage() {
               <div className="featured-card" key={hotel.id}>
                 <img
                   className="featured-img"
-                  src={hotel.imageUrl || `https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80`}
+                  src={hotel.imageUrl || "/assets/logo-badge.png"}
                   alt={hotel.hotelName}
                 />
                 <div className="featured-content">
@@ -265,8 +265,8 @@ function HomePage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="section" style={{ backgroundColor: "#f8fafc" }}>
-        <h2>Why Travel With LuxNes</h2>
+      <section className="section" style={{ backgroundColor: "var(--bg-card-hover, #f8fafc)" }}>
+        <h2>Why Travel With worldtours.com</h2>
         <div className="features">
           <div><Star style={{ color: "#eab308" }} /> Best Price Guarantee</div>
           <div><Award style={{ color: "#3b82f6" }} /> 1000+ Vetted Stays</div>
@@ -278,7 +278,7 @@ function HomePage() {
       {/* Special Offer */}
       <section className="offer">
         <h2>Special Launch Offer</h2>
-        <p>Flat 20% OFF on your first booking using LuxNes AI Travel Assistant</p>
+        <p>Flat 20% OFF on your first booking using worldtours.com AI Travel Assistant</p>
         <button onClick={() => navigate("/register")}>Register & Claim</button>
       </section>
 
@@ -287,7 +287,7 @@ function HomePage() {
         <h2>What Travelers Say</h2>
         <div className="card-container">
           <div className="card small">
-            <p>"LuxNes made booking my flights and hotels together extremely easy. The Razorpay verification was fast and transparent."</p>
+            <p>"worldtours.com made booking my flights and hotels together extremely easy. The Razorpay verification was fast and transparent."</p>
             <h4>- Rahul S.</h4>
           </div>
           <div className="card small">
@@ -297,14 +297,30 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Gallery */}
+      {/* Destination Showcase (Pure CSS Cards, Zero External Images) */}
       <section className="section">
-        <h2>Explore Destinations</h2>
-        <div className="gallery">
-          <img src="https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=400&q=80" alt="Taj Mahal" />
-          <img src="https://images.unsplash.com/photo-1506461883276-594a12b11db3?auto=format&fit=crop&w=400&q=80" alt="Jaipur Palace" />
-          <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=400&q=80" alt="Goa Beaches" />
-          <img src="https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=400&q=80" alt="Kerala Backwaters" />
+        <h2>Explore Top Destinations</h2>
+        <div className="gallery" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          {[
+            { title: "Taj Mahal", location: "Agra", icon: "🏛️", desc: "Wonders of India" },
+            { title: "Jaipur Palace", location: "Rajasthan", icon: "🏰", desc: "Royal Heritage" },
+            { title: "Goa Beaches", location: "Goa", icon: "🏖️", desc: "Sun & Ocean" },
+            { title: "Kerala Backwaters", location: "Kerala", icon: "🌴", desc: "Serene Nature" }
+          ].map((dest, i) => (
+            <div key={i} style={{
+              background: "var(--bg-card, rgba(15, 23, 42, 0.85))",
+              border: "var(--glass-border, 1px solid rgba(255,255,255,0.12))",
+              borderRadius: 16,
+              padding: "24px 20px",
+              textAlign: "center",
+              boxShadow: "var(--card-shadow, 0 4px 14px rgba(0,0,0,0.15))"
+            }}>
+              <div style={{ fontSize: "2.4rem", marginBottom: 10 }}>{dest.icon}</div>
+              <h3 style={{ fontSize: "1.1rem", marginBottom: 4, color: "var(--text-main, #ffffff)" }}>{dest.title}</h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--accent-cyan, #38bdf8)", fontWeight: 600 }}>📍 {dest.location}</p>
+              <span style={{ fontSize: "0.78rem", color: "var(--text-muted, #94a3b8)", marginTop: 6, display: "block" }}>{dest.desc}</span>
+            </div>
+          ))}
         </div>
       </section>
 
