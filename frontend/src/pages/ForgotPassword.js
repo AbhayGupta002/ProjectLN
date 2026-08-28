@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { sendResetLink } from "../api/ForgotPasswordApi";
+import "../styles/ForgotPassword.css";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
