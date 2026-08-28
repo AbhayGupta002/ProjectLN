@@ -102,6 +102,11 @@ public class AuthLockoutAndTwoFactorTest {
             }
 
             @Override
+            public String generateAndSendOtp(String email) {
+                return "123456";
+            }
+
+            @Override
             public boolean verifyOtp(String email, String otp) {
                 return otpVerifiedResult && "123456".equals(otp);
             }

@@ -44,8 +44,17 @@ Thumbs.db
 application.properties
 application.yml
 
+# Certificates & Production Secrets
+*.pem
+*.key
+*.p12
+*.crt
+*.jks
+secrets/
+
 # BUT allow example configs
 !application-example.properties
+!.env.example
 
 ############################################
 # GENERATED FILES
