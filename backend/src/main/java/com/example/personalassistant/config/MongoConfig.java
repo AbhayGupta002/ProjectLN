@@ -1,12 +1,10 @@
 package com.example.personalassistant.config;
 
 import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Robust MongoDB Configuration.
  * Automatically sanitizes and URL-encodes special characters in MONGO_URI username/password
- * (such as '@', ':', '#', '$') to prevent MongoDB driver parsing failures on Render.
+ * (such as '@', ':', '#', '$') to prevent Spring Boot's MongoAutoConfiguration from failing on Render.
  */
 @Configuration
 public class MongoConfig {
@@ -27,19 +25,16 @@ public class MongoConfig {
     private String rawMongoUri;
 
     @Bean
-    public MongoClient mongoClient() {
-        String sanitizedUri = sanitizeMongoUri(rawMongoUri);
-        try {
-            ConnectionString connectionString = new ConnectionString(sanitizedUri);
-            MongoClientSettings settings = MongoClientSettings.builder()
-                    .applyConnectionString(connectionString)
-                    .build();
-            return MongoClients.create(settings);
-        } catch (Exception e) {
-            log.warn("Failed to initialize MongoDB Connection with URI. Operating with local fallback: {}", e.getMessage());
-            ConnectionString fallback = new ConnectionString("mongodb://localhost:27017/ProjectLN");
-            return MongoClients.create(fallback);
-        }
+    public MongoClientSettingsBuilderCustomizer mongoPropertiesCustomizer() {
+        return builder -> {
+            String sanitized = sanitizeMongoUri(rawMongoUri);
+            try {
+                builder.applyConnectionString(new ConnectionString(sanitized));
+            } catch (Exception e) {
+                log.warn("Invalid MONGO_URI provided. Operating with fallback: {}", e.getMessage());
+                builder.applyConnectionString(new ConnectionString("mongodb://localhost:27017/ProjectLN"));
+            }
+        };
     }
 
     private String sanitizeMongoUri(String uri) {
