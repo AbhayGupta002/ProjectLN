@@ -113,10 +113,10 @@ function Navbar() {
             <Link to="/contact-us" className={isActive("/contact-us") ? "active" : ""}>
               Contact Us
             </Link>
-            <Link to="/complaint" className={isActive("/complaint") ? "active" : ""}>
+            <Link to="/complaint" className={`nav-secondary ${isActive("/complaint") ? "active" : ""}`}>
               Complaints
             </Link>
-            <Link to="/feedback" className={isActive("/feedback") ? "active" : ""}>
+            <Link to="/feedback" className={`nav-secondary ${isActive("/feedback") ? "active" : ""}`}>
               Feedback
             </Link>
 

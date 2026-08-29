@@ -265,7 +265,7 @@ function HomePage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="section" style={{ backgroundColor: "var(--bg-card-hover, #f8fafc)" }}>
+      <section className="section" style={{ background: "transparent" }}>
         <h2>Why Travel With worldtours.com</h2>
         <div className="features">
           <div><Star style={{ color: "#eab308" }} /> Best Price Guarantee</div>

@@ -607,21 +607,60 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE BREAKPOINTS & OVERFLOW SAFEGUARDS
    ========================================================================== */
 
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
   .nav-left {
-    gap: 1.5rem;
+    gap: 1.2rem;
   }
-  
+  .logo-text {
+    font-size: 1.18rem;
+  }
   .header-links a {
-    padding: 6px 10px;
-    font-size: 0.85rem;
+    padding: 5px 9px;
+    font-size: 0.83rem;
+  }
+  .nav-right {
+    gap: 0.4rem;
+  }
+  .auth-nav-group {
+    gap: 0.35rem;
+  }
+  .hotel-partner-btn, .admin-nav-btn {
+    padding: 6px 9px;
+    font-size: 0.8rem;
+  }
+  .user-login-btn {
+    padding: 6px 11px;
+    font-size: 0.83rem;
+  }
+  .user-signup-btn {
+    padding: 6px 13px;
+    font-size: 0.83rem;
+  }
+  .theme-cycle-nav-btn {
+    padding: 5px 9px;
+    font-size: 0.78rem;
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1150px) {
+  .header-links a.nav-secondary {
+    display: none;
+  }
+  .nav-divider {
+    display: none;
+  }
+  .logo-text {
+    font-size: 1.1rem;
+  }
+  .ngt-secret-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 1040px) {
   .mobile-menu-toggle {
     display: flex;
     align-items: center;
@@ -655,6 +694,10 @@
     font-size: 1rem;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.04);
+  }
+
+  .header-links a.nav-secondary {
+    display: block;
   }
 
   .auth-nav-group {

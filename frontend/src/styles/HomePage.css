@@ -412,21 +412,33 @@ body {
 /* Why Choose Us & Amenities */
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .features div {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 16px;
+  background-color: var(--bg-card, rgba(15, 23, 42, 0.85));
+  color: var(--text-main, #f8fafc);
+  padding: 18px 22px;
+  border-radius: 14px;
   font-weight: 600;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-  border: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+  box-shadow: var(--card-shadow, 0 4px 14px rgba(0, 0, 0, 0.12));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.features div:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-focus, #38bdf8);
+  box-shadow: 0 8px 20px var(--primary-glow, rgba(56, 189, 248, 0.25));
 }
 
 /* Special Offer Section */
