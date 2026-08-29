@@ -21,16 +21,20 @@ public class MongoService {
             String aiResponse,
             String intent
     ) {
-        ChatLog log = new ChatLog();
+        try {
+            ChatLog log = new ChatLog();
 
-        log.setSessionId(sessionId);
-        log.setEmail(email);
-        log.setUserPrompt(userPrompt);
-        log.setAiResponse(aiResponse);
-        log.setIntent(intent);
-        log.setCreatedAt(LocalDateTime.now());
+            log.setSessionId(sessionId);
+            log.setEmail(email);
+            log.setUserPrompt(userPrompt);
+            log.setAiResponse(aiResponse);
+            log.setIntent(intent);
+            log.setCreatedAt(LocalDateTime.now());
 
-        repo.save(log);
+            repo.save(log);
+        } catch (Exception e) {
+            // Gracefully log error to keep AI chat functional if Mongo is unreachable
+        }
     }
 
     public void saveAiChat(String userPrompt) {
