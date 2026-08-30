@@ -1,19 +1,20 @@
 package com.example.personalassistant.security;
 
-
-import org.springframework.security.config.Customizer;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import com.example.personalassistant.service.CustomUserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -21,22 +22,45 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public SecurityConfig(JwtFilter jwtFilter, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(
+            JwtFilter jwtFilter,
+            CustomUserDetailsService customUserDetailsService
+    ) {
         this.jwtFilter = jwtFilter;
         this.customUserDetailsService = customUserDetailsService;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .cors(Customizer.withDefaults())
+
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
+
                 .authorizeHttpRequests(auth -> auth
-                        // -------------------- PUBLIC AUTH & DISCOVERY --------------------
+
+                        // CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+
+                        // Root, health and error endpoints
+                        .requestMatchers(
+                                "/",
+                                "/error",
+                                "/api/health",
+                                "/actuator/health"
+                        )
+                        .permitAll()
+
+                        // Public authentication endpoints
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
@@ -45,13 +69,13 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
                                 "/api/auth/verify-2fa",
-                                "/api/admin/login",
-                                "/actuator/**",
-                                "/error"
-                        ).permitAll()
+                                "/api/admin/login"
+                        )
+                        .permitAll()
 
-                        // -------------------- PUBLIC CATALOGS & SEARCH --------------------
+                        // Public search and catalog endpoints
                         .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/public/**",
                                 "/api/destination",
                                 "/api/destination/**",
@@ -65,15 +89,22 @@ public class SecurityConfig {
                                 "/api/cabs/**",
                                 "/api/tours",
                                 "/api/tours/**",
-                                "/api/tour-booking/tourbylocation",
+                                "/api/tour-booking/tourbylocation"
+                        )
+                        .permitAll()
+
+                        // Public AI and chat endpoints
+                        .requestMatchers(
                                 "/api/chat/**",
                                 "/api/ai/**"
-                        ).permitAll()
+                        )
+                        .permitAll()
 
-                        // -------------------- ADMIN SECTION --------------------
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Admin endpoints
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
 
-                        // -------------------- HOTEL MANAGEMENT SECTION --------------------
+                        // Hotel dashboard and tour management
                         .requestMatchers(
                                 "/api/HotelLoginDashboard/**",
                                 "/api/hotellogindashboard/**",
@@ -81,12 +112,14 @@ public class SecurityConfig {
                                 "/api/tours/update/**",
                                 "/api/tours/delete/**",
                                 "/api/tour-booking/pending/**"
-                        ).hasRole("HOTEL")
+                        )
+                        .hasRole("HOTEL")
 
-                        // -------------------- USER CLIENT DASHBOARD --------------------
-                        .requestMatchers("/api/dashboard/**").hasRole("USER")
+                        // User dashboard
+                        .requestMatchers("/api/dashboard/**")
+                        .hasRole("USER")
 
-                        // -------------------- SECURE BOOKING & PAYMENT TRANSACTIONS --------------------
+                        // Booking and payment endpoints
                         .requestMatchers(
                                 "/api/bookings/**",
                                 "/api/flight-bookings/**",
@@ -95,23 +128,33 @@ public class SecurityConfig {
                                 "/api/cab-bookings/**",
                                 "/api/tour-booking/**",
                                 "/api/payment/**"
-                        ).hasAnyRole("USER", "HOTEL", "ADMIN")
+                        )
+                        .hasAnyRole("USER", "HOTEL", "ADMIN")
 
-                        // -------------------- ANY OTHER REQUEST → AUTH REQUIRED --------------------
-                        .anyRequest().authenticated()
+                        // Remaining endpoints require authentication
+                        .anyRequest()
+                        .authenticated()
                 )
 
-                .authenticationProvider(authProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .authenticationProvider(authenticationProvider())
+
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
 
     @Bean
-    public DaoAuthenticationProvider authProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    public DaoAuthenticationProvider authenticationProvider() {
+
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
+
         provider.setUserDetailsService(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
+
         return provider;
     }
 
@@ -121,10 +164,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
-
-
-
