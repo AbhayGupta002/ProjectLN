@@ -59,14 +59,23 @@ function Register() {
 
     setLoading(true);
     try {
-      await registerUser({ name: name.trim(), email: email.trim(), mobile: mobile.trim(), password });
+      const res = await registerUser({ name: name.trim(), email: email.trim(), mobile: mobile.trim(), password });
+
+      if (res && res.error) {
+        const errorText = typeof res.error === "string" ? res.error : (res.error.message || "Registration failed");
+        setErrorMsg(errorText);
+        return;
+      }
+
       alert("✅ Registration successful! Please log in with your credentials.");
       navigate("/login");
     } catch (err) {
-      console.error("Registration error:", err.response?.data);
+      console.error("Registration error:", err);
       const backendMessage =
         err.response?.data?.error?.message ||
         err.response?.data?.message ||
+        (typeof err.response?.data?.error === "string" ? err.response.data.error : null) ||
+        err.message ||
         "Registration failed. Please check your details.";
       setErrorMsg(backendMessage);
     } finally {
