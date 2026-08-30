@@ -9,35 +9,45 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * CORS Configuration for Security and Production Alignment.
- * Uses FRONTEND_URL environment variable to restrict cross-origin access in production
- * while supporting multi-port fallbacks for local development.
+ * Supports explicit origin matching for production domains (Firebase Hosting, Custom Domains)
+ * alongside multi-port fallbacks for local development.
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.cors.frontend-url:http://localhost:3000,http://localhost:3001}")
+    @Value("${app.cors.frontend-url:https://worldtours-app.web.app,https://worldtours-app.firebaseapp.com,https://worldtours.com,http://localhost:3000,http://localhost:3001}")
     private String frontendUrl;
 
     private List<String> getAllowedOrigins() {
         if (frontendUrl == null || frontendUrl.trim().isEmpty() || "*".equals(frontendUrl.trim())) {
             return List.of("*");
         }
-        return Arrays.stream(frontendUrl.split(","))
+        List<String> origins = new ArrayList<>(Arrays.stream(frontendUrl.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .toList();
+                .toList());
+
+        // Always include default Firebase hosting and production origins
+        if (!origins.contains("https://worldtours-app.web.app")) origins.add("https://worldtours-app.web.app");
+        if (!origins.contains("https://worldtours-app.firebaseapp.com")) origins.add("https://worldtours-app.firebaseapp.com");
+        if (!origins.contains("https://nextgem-technology.web.app")) origins.add("https://nextgem-technology.web.app");
+        if (!origins.contains("http://localhost:3000")) origins.add("http://localhost:3000");
+        if (!origins.contains("http://localhost:3001")) origins.add("http://localhost:3001");
+
+        return origins;
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         List<String> origins = getAllowedOrigins();
         var mapping = registry.addMapping("/**")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*");
 
         if (origins.contains("*")) {
@@ -58,7 +68,7 @@ public class WebConfig implements WebMvcConfigurer {
             configuration.setAllowedOrigins(origins);
         }
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 

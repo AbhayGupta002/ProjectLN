@@ -69,7 +69,8 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
                                 "/api/auth/verify-2fa",
-                                "/api/admin/login"
+                                "/api/admin/login",
+                                "/api/admin/register"
                         )
                         .permitAll()
 
