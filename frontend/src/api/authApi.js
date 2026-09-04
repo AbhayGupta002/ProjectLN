@@ -7,6 +7,11 @@ const HOTEL_DASHBOARD_URL = `${process.env.REACT_APP_API_URL || "http://localhos
 
 // ---------------- AUTH -----------------
 
+export const sendRegistrationOtp = async (userData) => {
+  const response = await axios.post(`${API_URL}/send-registration-otp`, userData);
+  return response.data;
+};
+
 export const registerUser = async (userData) => {
   const response = await axios.post(`${API_URL}/register`, userData);
   return response.data;

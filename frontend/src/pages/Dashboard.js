@@ -84,6 +84,12 @@ function Dashboard() {
   // Receipt Modal State
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
+  // Transactions Ledger & Search / Filter State
+  const [dbTransactions, setDbTransactions] = useState([]);
+  const [txnSearch, setTxnSearch] = useState("");
+  const [txnTypeFilter, setTxnTypeFilter] = useState("ALL");
+  const [txnStatusFilter, setTxnStatusFilter] = useState("ALL");
+
   // Favorites State (Stored per user in localStorage)
   const [favorites, setFavorites] = useState([]);
 
@@ -136,10 +142,13 @@ function Dashboard() {
           }
         }
 
-        // 3. Load all real bookings
+        // 3. Load all real bookings and transactions ledger
         if (profileData && profileData.id) {
           await loadAllBookings(profileData.id, profileData.email || localStorage.getItem("email"), token);
           await loadComplaints(profileData.id, token);
+          await loadTransactions(token);
+        } else {
+          await loadTransactions(token);
         }
 
         // 4. Preload active hotels for search
@@ -190,6 +199,19 @@ function Dashboard() {
       setComplaints(res.data || []);
     } catch (err) {
       console.error("Failed to load complaints:", err);
+    }
+  };
+
+  const loadTransactions = async (token) => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/payment/my-transactions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && Array.isArray(res.data)) {
+        setDbTransactions(res.data);
+      }
+    } catch (err) {
+      console.warn("Transactions ledger loaded from local bookings fallback:", err.message);
     }
   };
 
@@ -504,16 +526,34 @@ function Dashboard() {
 
   /* ------------------- 9. TRANSACTIONS LEDGER ------------------- */
   const getAllTransactions = () => {
+    if (dbTransactions && dbTransactions.length > 0) {
+      return dbTransactions.map((p) => ({
+        id: p.razorpayPaymentId || p.razorpayOrderId || `TXN-PAY-${p.id}`,
+        orderId: p.razorpayOrderId,
+        paymentId: p.razorpayPaymentId,
+        type: p.bookingType ? `${p.bookingType.toUpperCase()} Booking` : "Travel Booking",
+        bookingType: p.bookingType ? p.bookingType.toUpperCase() : "GENERAL",
+        details: p.description || `${p.bookingType} Booking #${p.bookingId}`,
+        date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-IN", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "N/A",
+        amount: p.amount || 0,
+        status: p.status === "PAID" ? "PAID" : (p.status || "CONFIRMED"),
+        method: p.paymentMethod || "UPI / ONLINE",
+        raw: p
+      }));
+    }
+
     const list = [];
 
     hotelBookings.forEach((b) => {
       list.push({
         id: `TXN-HTL-${b.id || "101"}`,
         type: "Hotel Stay",
+        bookingType: "HOTEL",
         details: b.hotel?.hotel || b.hotelName || "Hotel Stay Reservation",
         date: b.checkIn ? b.checkIn.split("T")[0] : "N/A",
         amount: b.amount || 3200,
         status: b.bookingStatus === "CANCELLED" ? "CANCELLED" : "CONFIRMED",
+        method: "UPI",
         raw: b
       });
     });
@@ -522,10 +562,12 @@ function Dashboard() {
       list.push({
         id: `TXN-FLT-${b.id || "201"}`,
         type: "Flight Ticket",
+        bookingType: "FLIGHT",
         details: `Flight ID #${b.flightId} | Passenger: ${b.passengerName}`,
         date: b.journeyDate || "N/A",
         amount: b.totalFare || 0,
         status: b.bookingStatus || "CONFIRMED",
+        method: "UPI",
         raw: b
       });
     });
@@ -534,10 +576,12 @@ function Dashboard() {
       list.push({
         id: `TXN-TRN-${b.id || "301"}`,
         type: "Train Ticket",
+        bookingType: "TRAIN",
         details: `Train ID #${b.trainId} | Passenger: ${b.passengerName}`,
         date: b.journeyDate || "N/A",
         amount: b.totalFare || 0,
         status: b.bookingStatus || "CONFIRMED",
+        method: "UPI",
         raw: b
       });
     });
@@ -546,10 +590,12 @@ function Dashboard() {
       list.push({
         id: `TXN-BUS-${b.id || "401"}`,
         type: "Bus Seat",
+        bookingType: "BUS",
         details: `Bus ID #${b.busId} | Passenger: ${b.passengerName}`,
         date: b.journeyDate || "N/A",
         amount: b.totalFare || 0,
         status: b.bookingStatus || "CONFIRMED",
+        method: "UPI",
         raw: b
       });
     });
@@ -558,7 +604,29 @@ function Dashboard() {
   };
 
   const transactions = getAllTransactions();
-  const totalSpend = transactions.reduce((acc, t) => t.status !== "CANCELLED" ? acc + (Number(t.amount) || 0) : acc, 0);
+
+  const filteredTransactions = transactions.filter((tx) => {
+    const q = txnSearch.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      tx.id.toLowerCase().includes(q) ||
+      (tx.orderId && tx.orderId.toLowerCase().includes(q)) ||
+      (tx.details && tx.details.toLowerCase().includes(q)) ||
+      (tx.type && tx.type.toLowerCase().includes(q));
+
+    const matchesType =
+      txnTypeFilter === "ALL" ||
+      (tx.bookingType && tx.bookingType.toUpperCase() === txnTypeFilter) ||
+      (tx.type && tx.type.toUpperCase().includes(txnTypeFilter));
+
+    const matchesStatus =
+      txnStatusFilter === "ALL" ||
+      tx.status.toUpperCase() === txnStatusFilter;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  const totalSpend = transactions.reduce((acc, t) => (t.status !== "CANCELLED" && t.status !== "FAILED") ? acc + (Number(t.amount) || 0) : acc, 0);
 
   if (loading) {
     return (
@@ -1390,12 +1458,105 @@ function Dashboard() {
           {/* ======================= MENU 5: TRANSACTIONS ======================= */}
           {activeMenu === "transactions" && (
             <div className="dash-card">
-              <div className="dash-card-header">
+              <div className="dash-card-header" style={{ flexWrap: "wrap", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h2 className="dash-card-title">Transactions Ledger</h2>
                   <p className="dash-card-subtitle">
-                    Total Lifetime Spend: <strong style={{ color: "var(--accent-cyan, #38bdf8)" }}>₹{totalSpend}</strong>
+                    Total Lifetime Spend: <strong style={{ color: "var(--accent-cyan, #38bdf8)" }}>₹{totalSpend}</strong> • Immutable Audit Trail
                   </p>
+                </div>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.8rem", padding: "4px 10px", borderRadius: "999px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                    🔒 Undeletable Records
+                  </span>
+                </div>
+              </div>
+
+              {/* Search & Filter Toolbar */}
+              <div className="dash-search-toolbar" style={{ display: "flex", flexWrap: "wrap", gap: "12px", margin: "16px 0 24px 0", alignItems: "center" }}>
+                <div className="dash-search-box" style={{ flex: "1 1 280px", position: "relative", display: "flex", alignItems: "center" }}>
+                  <Search size={18} style={{ position: "absolute", left: "14px", color: "var(--text-muted, #94a3b8)", pointerEvents: "none" }} />
+                  <input
+                    type="text"
+                    placeholder="Search by Txn ID, Order ID, or Service details..."
+                    value={txnSearch}
+                    onChange={(e) => setTxnSearch(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 38px 10px 42px",
+                      background: "rgba(15, 23, 42, 0.6)",
+                      border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+                      borderRadius: "10px",
+                      color: "var(--text-main, #ffffff)",
+                      fontSize: "0.9rem",
+                      outline: "none"
+                    }}
+                  />
+                  {txnSearch && (
+                    <button
+                      onClick={() => setTxnSearch("")}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--text-muted, #94a3b8)",
+                        cursor: "pointer",
+                        padding: "4px"
+                      }}
+                      title="Clear search"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <select
+                    className="dash-filter-select"
+                    value={txnTypeFilter}
+                    onChange={(e) => setTxnTypeFilter(e.target.value)}
+                    style={{
+                      padding: "10px 14px",
+                      background: "rgba(15, 23, 42, 0.7)",
+                      border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.15))",
+                      borderRadius: "10px",
+                      color: "var(--text-main, #ffffff)",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      outline: "none"
+                    }}
+                  >
+                    <option value="ALL">All Services</option>
+                    <option value="HOTEL">Hotel Stays</option>
+                    <option value="FLIGHT">Flights</option>
+                    <option value="TRAIN">Trains</option>
+                    <option value="BUS">Buses</option>
+                    <option value="TOUR">Tour Packages</option>
+                    <option value="CAB">Cab Bookings</option>
+                  </select>
+
+                  <select
+                    className="dash-filter-select"
+                    value={txnStatusFilter}
+                    onChange={(e) => setTxnStatusFilter(e.target.value)}
+                    style={{
+                      padding: "10px 14px",
+                      background: "rgba(15, 23, 42, 0.7)",
+                      border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.15))",
+                      borderRadius: "10px",
+                      color: "var(--text-main, #ffffff)",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      outline: "none"
+                    }}
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="PAID">PAID</option>
+                    <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="FAILED">FAILED</option>
+                  </select>
                 </div>
               </div>
 
@@ -1406,6 +1567,7 @@ function Dashboard() {
                       <th>Txn ID</th>
                       <th>Service Type</th>
                       <th>Description</th>
+                      <th>Method</th>
                       <th>Date</th>
                       <th>Amount</th>
                       <th>Status</th>
@@ -1413,7 +1575,7 @@ function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((tx, idx) => (
+                    {filteredTransactions.map((tx, idx) => (
                       <tr key={idx}>
                         <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-muted, #94a3b8)" }}>
                           {tx.id}
@@ -1422,10 +1584,13 @@ function Dashboard() {
                           <span className="item-badge-pill">{tx.type}</span>
                         </td>
                         <td>{tx.details}</td>
+                        <td style={{ fontSize: "0.82rem", color: "var(--text-muted, #94a3b8)" }}>
+                          {tx.method || "UPI / QR"}
+                        </td>
                         <td>{tx.date}</td>
                         <td style={{ fontWeight: 800, color: "var(--text-main, #ffffff)" }}>₹{tx.amount}</td>
                         <td>
-                          <span className={`booking-status-tag ${tx.status.toLowerCase()}`}>
+                          <span className={`booking-status-tag ${(tx.status || "CONFIRMED").toLowerCase()}`}>
                             {tx.status}
                           </span>
                         </td>
@@ -1440,10 +1605,10 @@ function Dashboard() {
                         </td>
                       </tr>
                     ))}
-                    {transactions.length === 0 && (
+                    {filteredTransactions.length === 0 && (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted, #94a3b8)" }}>
-                          No transaction records found.
+                        <td colSpan={8} style={{ textAlign: "center", padding: "35px", color: "var(--text-muted, #94a3b8)" }}>
+                          No transaction records found matching your filter criteria.
                         </td>
                       </tr>
                     )}

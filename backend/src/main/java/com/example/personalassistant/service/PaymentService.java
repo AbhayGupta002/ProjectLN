@@ -89,6 +89,8 @@ public class PaymentService {
         Payment payment = Payment.builder()
                 .bookingType(bookingType.toUpperCase())
                 .bookingId(bookingId)
+                .userEmail(userEmail != null && !userEmail.isBlank() ? userEmail : "guest@worldtours.com")
+                .description(bookingType.toUpperCase() + " Booking #" + bookingId)
                 .razorpayOrderId(order.get("id"))
                 .amount(BigDecimal.valueOf(serverAmount))
                 .currency("INR")
@@ -101,6 +103,9 @@ public class PaymentService {
         response.put("amount", order.get("amount"));
         response.put("currency", order.get("currency"));
         response.put("key", apiKey);
+        response.put("bookingType", bookingType);
+        response.put("bookingId", bookingId);
+        response.put("upiUri", "upi://pay?pa=worldtours@okaxis&pn=WorldTours&am=" + serverAmount + "&cu=INR&tr=" + order.get("id"));
         return response;
     }
 
@@ -167,6 +172,14 @@ public class PaymentService {
         if (paymentOpt.isPresent()) {
             Payment payment = paymentOpt.get();
             payment.setRazorpayPaymentId(request.getPaymentId());
+            if (request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank()) {
+                payment.setPaymentMethod(request.getPaymentMethod());
+            } else {
+                payment.setPaymentMethod("UPI / ONLINE");
+            }
+            if (request.getUpiVpa() != null) {
+                payment.setUpiVpa(request.getUpiVpa());
+            }
             payment.setStatus(isValid ? PaymentStatus.PAID : PaymentStatus.FAILED);
             paymentRepository.save(payment);
         }
@@ -176,6 +189,19 @@ public class PaymentService {
         }
 
         return isValid;
+    }
+
+    public java.util.List<Payment> getUserTransactions(String userEmail, String status, String type, String search) {
+        PaymentStatus paymentStatus = null;
+        if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
+            try {
+                paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
+            } catch (Exception ignored) {}
+        }
+        String bookingType = (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) ? type.toUpperCase() : null;
+        String searchTerm = (search != null && !search.isBlank()) ? search.trim() : null;
+
+        return paymentRepository.searchUserTransactions(userEmail, paymentStatus, bookingType, searchTerm);
     }
 
     private void updateBookingStatusOnPayment(String bookingType, Long bookingId) {

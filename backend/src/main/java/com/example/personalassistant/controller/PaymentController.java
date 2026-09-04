@@ -67,4 +67,17 @@ public class PaymentController {
                     .body(Map.of("success", false, "message", "Invalid payment signature"));
         }
     }
+
+    @GetMapping("/my-transactions")
+    public ResponseEntity<?> getMyTransactions(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String search,
+            org.springframework.security.core.Authentication authentication) {
+        String email = authentication != null ? authentication.getName() : null;
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required"));
+        }
+        return ResponseEntity.ok(paymentService.getUserTransactions(email, status, type, search));
+    }
 }

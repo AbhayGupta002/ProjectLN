@@ -843,3 +843,61 @@
     padding: 20px 16px;
   }
 }
+
+/* ===================================================================
+   SEARCH & FILTER TOOLBAR & RESPONSIVE REFINEMENTS
+   =================================================================== */
+.dash-search-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 24px 0;
+  align-items: center;
+}
+
+.dash-search-box input {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dash-search-box input:focus {
+  border-color: var(--border-focus, #38bdf8) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+.dash-filter-select {
+  transition: border-color 0.2s;
+}
+
+.dash-filter-select:focus {
+  border-color: var(--border-focus, #38bdf8) !important;
+}
+
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+@media (max-width: 680px) {
+  .dash-search-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dash-search-box {
+    width: 100%;
+  }
+  .dash-filter-select {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .dash-card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .dash-data-table th,
+  .dash-data-table td {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+}

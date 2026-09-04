@@ -46,65 +46,97 @@ public class UserService {
     @Autowired
     private OtpService otpService;
 
-    @org.springframework.transaction.annotation.Transactional
-    public ResponseEntity<Response> registerUser(UserDto dto) {
+    @Autowired
+    private EmailService emailService;
 
+    public ResponseEntity<Response> sendRegistrationOtp(UserDto dto) {
         Response response = new Response();
 
-        if (userLoginRepository.existsByEmail(dto.getEmail())) {
-            ErrorDetails error = new ErrorDetails(HttpStatus
-                            .BAD_REQUEST,
-                    "User already exists try with another email"
-            );
-            response.setError(error);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        if (!dto.getEmail().endsWith("@gmail.com")) {
+        if (dto.getEmail() == null || !dto.getEmail().toLowerCase().endsWith("@gmail.com")) {
             ErrorDetails error = new ErrorDetails(
                     HttpStatus.BAD_REQUEST,
                     "Only Gmail addresses are allowed!"
             );
             response.setError(error);
+            response.setMessage("Only Gmail addresses are allowed!");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-//        // 2️⃣ Check if email is verified
-//        OtpVerification otp = otpRepository.findByEmail(dto.getEmail()).orElse(null);
-//        if (otp == null || !otp.isVerified()) {
-//            response.setError(new ErrorDetails(
-//                    HttpStatus.BAD_REQUEST,
-//                    "Email not verified. Please verify OTP first."
-//            ));
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//        }
-//
-//        // 3️⃣ Optional: Check OTP expiry again (extra safety)
-//        if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
-//            response.setError(new ErrorDetails(
-//                    HttpStatus.BAD_REQUEST,
-//                    "OTP expired. Please request new OTP."
-//            ));
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//        }
-            User user = new User();
-            user.setName(dto.getName());
-            user.setEmail(dto.getEmail());
-            user.setMobile(dto.getMobile());
-            user.setAccountEnum(AccountEnum.ACTIVE);
-            User savedUser = userRepository.save(user);
 
-            UserLogin login = new UserLogin();  //WIP
-            login.setEmail(dto.getEmail());
-            login.setPassword(passwordEncoder.encode(dto.getPassword()));
-            login.setEmailVerified(true);
-            login.setTwoFactorEnabled(false);
+        if (userLoginRepository.existsByEmail(dto.getEmail())) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.BAD_REQUEST,
+                    "User already exists try with another email"
+            );
+            response.setError(error);
+            response.setMessage("User already exists try with another email");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-            userLoginRepository.save(login);
+        otpService.generateAndSendOtp(dto.getEmail());
 
-//            otpRepository.delete(otp);
+        response.setSuccess(true);
+        response.setMessage("Verification OTP sent to " + dto.getEmail());
+        return ResponseEntity.ok(response);
+    }
 
-            response.setData(savedUser);
-            return ResponseEntity.ok(response);
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<Response> registerUser(UserDto dto) {
+
+        Response response = new Response();
+
+        if (dto.getEmail() == null || !dto.getEmail().toLowerCase().endsWith("@gmail.com")) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.BAD_REQUEST,
+                    "Only Gmail addresses are allowed!"
+            );
+            response.setError(error);
+            response.setMessage("Only Gmail addresses are allowed!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (userLoginRepository.existsByEmail(dto.getEmail())) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.BAD_REQUEST,
+                    "User already exists try with another email"
+            );
+            response.setError(error);
+            response.setMessage("User already exists try with another email");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Verify registration OTP
+        if (dto.getOtp() != null && !dto.getOtp().isBlank()) {
+            boolean otpValid = otpService.verifyOtp(dto.getEmail(), dto.getOtp());
+            if (!otpValid) {
+                ErrorDetails error = new ErrorDetails(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid or expired verification code."
+                );
+                response.setError(error);
+                response.setMessage("Invalid or expired verification code.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setMobile(dto.getMobile());
+        user.setAccountEnum(AccountEnum.ACTIVE);
+        User savedUser = userRepository.save(user);
+
+        UserLogin login = new UserLogin();
+        login.setEmail(dto.getEmail());
+        login.setPassword(passwordEncoder.encode(dto.getPassword()));
+        login.setEmailVerified(true);
+        login.setTwoFactorEnabled(false);
+
+        userLoginRepository.save(login);
+
+        response.setSuccess(true);
+        response.setData(savedUser);
+        response.setMessage("register successful");
+        return ResponseEntity.ok(response);
     }
 
 
@@ -218,26 +250,42 @@ public class UserService {
         return ResponseEntity.ok(response);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
-
-        if (user == null) {
-            return ResponseEntity.status(404).body("enter mail id:");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", "Incorrect Details"));
         }
 
-        String token = UUID.randomUUID().toString();
-        user.setResetToken(token);
-        user.setTokenExpiry(LocalDateTime.now().plusMinutes(15)); // 15-min expiration
-        userRepository.save(user);
+        String targetEmail = email.trim();
+        UserLogin userLogin = userLoginRepository.findByEmail(targetEmail).orElse(null);
+        User user = userRepository.findByEmail(targetEmail).orElse(null);
 
-        // Also trigger OTP email for password retrieval
-        try {
-            otpService.sendOtp(email);
-        } catch (Exception e) {
-            log.warn("Forgot password email dispatch failed: {}", e.getMessage());
+        if (userLogin == null || user == null) {
+            // Requirement 1: If not registered, return "Incorrect Details"
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", "Incorrect Details"));
         }
 
-        return ResponseEntity.ok("Reset token generated: " + token);
+        // Generate a new secure random 8-character alphanumeric temporary password
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
+        java.security.SecureRandom rnd = new java.security.SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        String newPassword = sb.toString();
+
+        userLogin.setPassword(passwordEncoder.encode(newPassword));
+        userLogin.setAccountLocked(false);
+        userLogin.setFailedLoginAttempts(0);
+        userLoginRepository.save(userLogin);
+
+        // Send generated password directly to the registered email
+        emailService.sendNewPassword(targetEmail, newPassword);
+
+        return ResponseEntity.ok(java.util.Map.of(
+                "success", true,
+                "message", "Password has been sent to your registered email address."
+        ));
     }
 
     public ResponseEntity<?> resetPassword(String token, String newPassword) {

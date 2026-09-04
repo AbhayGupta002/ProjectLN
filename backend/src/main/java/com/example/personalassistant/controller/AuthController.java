@@ -65,9 +65,13 @@ public class AuthController {
 //        return ResponseEntity.ok("Login successfu");
 //    }
 
+    @PostMapping("/send-registration-otp")
+    public ResponseEntity<?> sendRegistrationOtp(@jakarta.validation.Valid @RequestBody UserDto userDto) {
+        return userService.sendRegistrationOtp(userDto);
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserDto userDto) {
-//        otpService.sendOtp(userDto.getEmail());
+    public ResponseEntity<?> register(@jakarta.validation.Valid @RequestBody UserDto userDto) {
         return userService.registerUser(userDto);
     }
 

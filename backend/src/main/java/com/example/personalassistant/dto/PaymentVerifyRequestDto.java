@@ -8,5 +8,6 @@ public class PaymentVerifyRequestDto {
     private String paymentId;
     private String orderId;
     private String signature;
+    private String paymentMethod;
+    private String upiVpa;
 }
-

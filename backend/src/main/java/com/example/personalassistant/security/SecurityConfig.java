@@ -63,6 +63,7 @@ public class SecurityConfig {
                         // Public authentication endpoints
                         .requestMatchers(
                                 "/api/auth/register",
+                                "/api/auth/send-registration-otp",
                                 "/api/auth/login",
                                 "/api/auth/hotelregister",
                                 "/api/auth/hotellogin",
@@ -70,7 +71,8 @@ public class SecurityConfig {
                                 "/api/auth/reset-password",
                                 "/api/auth/verify-2fa",
                                 "/api/admin/login",
-                                "/api/admin/register"
+                                "/api/admin/register",
+                                "/api/otp/**"
                         )
                         .permitAll()
 
