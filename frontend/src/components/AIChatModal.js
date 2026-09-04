@@ -27,6 +27,15 @@ function AIChatModal({ onClose }) {
   const chatEndRef = useRef(null);
   const modalRef = useRef(null);
 
+  // Prevent page background from scrolling while AI panel is open
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   // Handle ESC key press to close modal
   useEffect(() => {
     const handleKeyDown = (e) => {

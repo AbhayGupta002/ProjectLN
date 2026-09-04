@@ -68,10 +68,11 @@
   flex-direction: column;
   gap: 24px;
   box-shadow: var(--card-shadow, 0 8px 24px rgba(0, 0, 0, 0.2));
-  align-self: flex-start;
-  position: sticky;
-  top: 90px;
-  height: calc(100vh - 120px);
+  position: fixed;
+  top: 92px;
+  left: max(20px, calc((100vw - 1540px) / 2 + 20px));
+  height: calc(100vh - 116px);
+  z-index: 100;
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -227,6 +228,7 @@
 .user-dashboard-main {
   flex: 1;
   min-width: 0;
+  margin-left: 284px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -833,6 +835,11 @@
 
   .user-dashboard-sidebar.mobile-open {
     display: flex;
+  }
+
+  .user-dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .user-dashboard-shell {
