@@ -27,6 +27,7 @@ import TrainBooking from "./pages/TrainBooking";
 // Protected Route & 404
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import FixedAIAgent from "./components/FixedAIAgent";
 
 function App() {
   React.useEffect(() => {
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <Router>
+      <FixedAIAgent />
       <Routes>
         {/* Home & Public Booking Searches */}
         <Route path="/" element={<Home />} />

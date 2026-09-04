@@ -5,30 +5,33 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 20, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(10, 10, 20, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: fadeIn 0.3s ease-in-out;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 0 24px 92px 0;
+  animation: fadeIn 0.25s ease-in-out;
   z-index: 9999;
 }
 
 /* MODAL */
 .ai-modal {
-  width: 420px;
-  height: 550px;
-  border-radius: 16px;
+  width: 430px;
+  max-width: calc(100vw - 48px);
+  height: 600px;
+  max-height: calc(100vh - 120px);
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
-  background: rgba(30, 30, 50, 0.6);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
 
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
-  animation: slideUp 0.4s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(56, 189, 248, 0.25);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* HEADER */
@@ -543,4 +546,286 @@
 .agent-item-card.selected .select-card-btn {
   background-color: #10b981;
   color: white;
+}
+
+/* ==========================================================================
+   FIXED RIGHT-SIDE AI AGENT PANEL (Stationary on Viewport, Never Scrolls)
+   ========================================================================== */
+.fixed-agent-panel-wrapper {
+  position: fixed;
+  right: 24px;
+  bottom: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+/* Floating Helper Tip Speech Bubble */
+.agent-floating-tip {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  color: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.25);
+  margin-bottom: 12px;
+  max-width: 230px;
+  cursor: pointer;
+  animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: bottom right;
+}
+
+.agent-floating-tip::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  right: 24px;
+  width: 12px;
+  height: 12px;
+  background: #1e293b;
+  border-right: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-bottom: 1.5px solid rgba(56, 189, 248, 0.45);
+  transform: rotate(45deg);
+}
+
+.agent-floating-tip strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #38bdf8;
+  margin-bottom: 3px;
+}
+
+.agent-floating-tip p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.agent-floating-tip .tip-close {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 15px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.agent-floating-tip .tip-close:hover {
+  color: #fff;
+}
+
+/* Fixed Trigger Button */
+.fixed-agent-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-radius: 999px;
+  padding: 6px 16px 6px 6px;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 24px rgba(56, 189, 248, 0.25);
+  backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.fixed-agent-trigger-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 32px rgba(56, 189, 248, 0.45);
+}
+
+.fixed-agent-trigger-btn.active {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: #38bdf8;
+  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.4);
+}
+
+/* Logo container in fixed button */
+.agent-logo-frame {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle, #1e293b, #0f172a);
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.agent-trigger-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.fixed-agent-trigger-btn:hover .agent-trigger-logo {
+  transform: rotate(15deg) scale(1.08);
+}
+
+/* Online pulsating indicator */
+.agent-online-pulse {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  background-color: #22c55e;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.agent-trigger-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.agent-trigger-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.agent-trigger-status {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #38bdf8;
+  line-height: 1.2;
+}
+
+.agent-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #38bdf8;
+  transition: all 0.2s ease;
+}
+
+.fixed-agent-trigger-btn:hover .agent-toggle-icon {
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+}
+
+/* AI Modal Header Avatar */
+.ai-header-avatar-frame {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.ai-header-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.ai-header-online-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  background-color: #22c55e;
+  border: 1.5px solid #0f172a;
+  border-radius: 50%;
+}
+
+/* AI Message Bubble Avatar */
+.ai-msg-avatar-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  background: #0f172a;
+  margin-right: 8px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ai-msg-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Animations */
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.6) translateY(20px); }
+  70% { transform: scale(1.05) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* RESPONSIVENESS */
+@media (max-width: 640px) {
+  .ai-modal-overlay {
+    padding: 0;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .ai-modal {
+    width: 100%;
+    max-width: 100%;
+    height: 85vh;
+    border-radius: 24px 24px 0 0;
+  }
+  .fixed-agent-panel-wrapper {
+    right: 16px;
+    bottom: 18px;
+  }
+  .fixed-agent-trigger-btn {
+    padding: 5px 12px 5px 5px;
+    gap: 8px;
+  }
+  .agent-logo-frame {
+    width: 36px;
+    height: 36px;
+  }
+  .agent-trigger-title {
+    font-size: 0.82rem;
+  }
+  .agent-trigger-status {
+    font-size: 0.68rem;
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { Plane, Train, Bus, Car, Hotel as HotelIcon, CreditCard, X, Send, Trash2, Sun, Moon } from "lucide-react";
+import { Plane, Train, Bus, Car, X, Send, Trash2, Sun, Moon } from "lucide-react";
 import "../styles/AIChatModal.css";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -367,8 +367,14 @@ function AIChatModal({ onClose }) {
         {/* HEADER */}
         <div className="ai-header">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span className="logo-spark">✨</span>
-            <h3>LuxNes Travel Agent</h3>
+            <div className="ai-header-avatar-frame">
+              <img src="/assets/ai-agent-logo.png" alt="AI Agent" className="ai-header-avatar-img" />
+              <span className="ai-header-online-dot"></span>
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, letterSpacing: "-0.01em" }}>LuxNes AI Agent</h3>
+              <span style={{ fontSize: "0.72rem", opacity: 0.85, fontWeight: 500, display: "block" }}>Smart Travel Assistant</span>
+            </div>
           </div>
           <div className="ai-actions">
             <button onClick={() => setDarkMode(!darkMode)} title="Toggle Theme">
@@ -387,6 +393,11 @@ function AIChatModal({ onClose }) {
         <div className="ai-body">
           {messages.map((msg, i) => (
             <div key={i} className={`msg-wrapper ${msg.role === "user" ? "user" : "ai"}`}>
+              {msg.role === "ai" && (
+                <div className="ai-msg-avatar-wrap">
+                  <img src="/assets/ai-agent-logo.png" alt="AI Agent" className="ai-msg-avatar" />
+                </div>
+              )}
               <div className={`message-bubble ${msg.role === "user" ? "user-bubble" : "ai-bubble"}`}>
                 <p style={{ whiteSpace: "pre-line" }}>{msg.text}</p>
 
@@ -446,6 +457,9 @@ function AIChatModal({ onClose }) {
 
           {loading && (
             <div className="msg-wrapper ai">
+              <div className="ai-msg-avatar-wrap">
+                <img src="/assets/ai-agent-logo.png" alt="AI Agent" className="ai-msg-avatar" />
+              </div>
               <div className="message-bubble ai-bubble typing">
                 <span className="dot"></span>
                 <span className="dot"></span>

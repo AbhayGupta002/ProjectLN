@@ -4,13 +4,11 @@ import { searchByLocation, searchTourByDays } from "../api/publicApi";
 import axios from "axios";
 import HomeNavbar from "../components/HomeNavbar";
 import Footer from "../components/Footer";
-import AIChatModal from "../components/AIChatModal";
-import { Plane, Train, Bus, Hotel, Search, Star, Award, Shield, Wifi, Coffee, MapPin, Calendar } from "lucide-react";
+import { Plane, Train, Bus, Hotel, Search, Star, Award, Shield, Wifi, MapPin, Calendar } from "lucide-react";
 import "../styles/HomePage.css";
 
 function HomePage() {
   const navigate = useNavigate();
-  const [openAI, setOpenAI] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
   // Active Tab: hotel, flight, bus, train
@@ -99,10 +97,13 @@ function HomePage() {
         <p>Book luxury stays, flights, buses, and trains at the best guaranteed rates</p>
 
         {/* AI Travel Assistant Prompt Strip */}
-        <div className="hero-ai-strip" onClick={() => setOpenAI(true)}>
-          <span className="hero-ai-badge">✨ AI Travel Assistant</span>
+        <div className="hero-ai-strip" onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src="/assets/ai-agent-logo.png" alt="AI Agent" style={{ width: 26, height: 26, borderRadius: "50%", border: "1.5px solid #38bdf8" }} />
+            <span className="hero-ai-badge">AI Travel Assistant</span>
+          </div>
           <span className="hero-ai-text">Plan your multi-modal trip with hotels, transit & budget</span>
-          <button className="hero-ai-btn" onClick={(e) => { e.stopPropagation(); setOpenAI(true); }}>Ask AI →</button>
+          <button className="hero-ai-btn" onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-ai-chat")); }}>Ask AI →</button>
         </div>
 
         {/* Tabbed Search Panel */}
@@ -323,9 +324,6 @@ function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* AI Chat Modal */}
-      {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
 
       {/* Branded NEXTGEM-TECHNOLOGY Footer */}
       <Footer />

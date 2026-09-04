@@ -12,7 +12,6 @@ import {
   History,
   HelpCircle,
   Heart,
-  MessageSquare,
   LogOut,
   Menu,
   X,
@@ -32,7 +31,6 @@ import { getUserTrainBookings, cancelTrainBooking } from "../api/trainBookingApi
 import { getInitialTheme, applyTheme, THEME_CONFIG } from "../utils/theme";
 import HomeNavbar from "../components/HomeNavbar";
 import Footer from "../components/Footer";
-import AIChatModal from "../components/AIChatModal";
 import "../styles/Dashboard.css";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -44,7 +42,6 @@ function Dashboard() {
   // "overview", "profile", "search-book", "bookings", "transactions", "favorites", "support", "settings"
   const [activeMenu, setActiveMenu] = useState("overview");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [openAI, setOpenAI] = useState(false);
 
   // User Profile State
   const [user, setUser] = useState(null);
@@ -767,8 +764,8 @@ function Dashboard() {
           </nav>
 
           <div className="user-sidebar-footer">
-            <button className="sidebar-ai-btn" onClick={() => setOpenAI(true)}>
-              <MessageSquare size={16} />
+            <button className="sidebar-ai-btn" onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}>
+              <img src="/assets/ai-agent-logo.png" alt="AI Agent" style={{ width: 20, height: 20, borderRadius: "50%", marginRight: 6, objectFit: "cover" }} />
               <span>AI Trip Agent</span>
             </button>
             <button className="sidebar-logout-btn" onClick={handleLogout}>
@@ -875,8 +872,8 @@ function Dashboard() {
                   <Bus size={22} color="#ea580c" />
                   <span>Book Buses</span>
                 </button>
-                <button className="quick-action-btn" onClick={() => setOpenAI(true)}>
-                  <MessageSquare size={22} color="#a855f7" />
+                <button className="quick-action-btn" onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}>
+                  <img src="/assets/ai-agent-logo.png" alt="AI Agent" style={{ width: 24, height: 24, borderRadius: "50%", marginBottom: 4, objectFit: "cover" }} />
                   <span>AI Travel Planner</span>
                 </button>
               </div>
@@ -2296,9 +2293,6 @@ function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* AI Assistant Modal */}
-      {openAI && <AIChatModal onClose={() => setOpenAI(false)} />}
 
       {/* 3. Docked Footer */}
       <Footer />
