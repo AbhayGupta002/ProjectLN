@@ -21,9 +21,11 @@ public class TrainController {
 
     @GetMapping("/search")
     public ResponseEntity<Response> searchTrains(
-            @RequestParam String source,
-            @RequestParam String destination) {
-        return trainService.searchTrains(source, destination);
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String query) {
+        return trainService.searchTrains(source, destination, date, query);
     }
 
     @PostMapping("/add")

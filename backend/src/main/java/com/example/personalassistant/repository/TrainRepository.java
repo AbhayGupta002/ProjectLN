@@ -8,6 +8,8 @@ import java.util.List;
 @Repository
 public interface TrainRepository extends JpaRepository<Train, Long> {
     List<Train> findBySourceIgnoreCaseAndDestinationIgnoreCase(String source, String destination);
+    List<Train> findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(String source, String destination);
+    List<Train> findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(String source, String destination, String trainName, String trainNumber);
     List<Train> findByStatusTrue();
     boolean existsByTrainNumber(String trainNumber);
 }

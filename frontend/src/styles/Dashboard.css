@@ -901,3 +901,24 @@
     white-space: nowrap;
   }
 }
+
+/* Transport Search Box and Date Picker Styling */
+.dash-search-bar input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .dash-search-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .dash-search-bar > div {
+    width: 100% !important;
+  }
+  .dash-search-bar button {
+    width: 100%;
+  }
+}
+

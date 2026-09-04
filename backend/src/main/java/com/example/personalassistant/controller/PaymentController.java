@@ -80,4 +80,34 @@ public class PaymentController {
         }
         return ResponseEntity.ok(paymentService.getUserTransactions(email, status, type, search));
     }
+
+    @PostMapping("/update-price")
+    public ResponseEntity<?> updatePrice(
+            @RequestParam String bookingType,
+            @RequestParam Long bookingId,
+            @RequestParam double newPrice) {
+        try {
+            double updatedPrice = paymentService.updateBookingPrice(bookingType, bookingId, newPrice);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Database price updated and payment cache refreshed instantly.",
+                    "bookingType", bookingType.toUpperCase(),
+                    "bookingId", bookingId,
+                    "newPrice", updatedPrice
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/evict-price-cache")
+    public ResponseEntity<?> evictPriceCache(
+            @RequestParam(required = false) String bookingType,
+            @RequestParam(required = false) Long bookingId) {
+        paymentService.evictPriceCache(bookingType, bookingId);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Payment price cache evicted successfully."
+        ));
+    }
 }

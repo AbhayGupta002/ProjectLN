@@ -79,12 +79,32 @@ public class FlightService {
         }
     }
 
-    // Search Flights
-    public ResponseEntity<Response> searchFlights(String source, String destination) {
+    // Search Flights with Flexible Route, Keyword, and Date support
+    public ResponseEntity<Response> searchFlights(String source, String destination, String date, String query) {
         Response response = new Response();
         try {
-            List<Flight> flights = flightRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(source, destination);
+            List<Flight> flights;
+            String src = (source != null) ? source.trim() : "";
+            String dst = (destination != null) ? destination.trim() : "";
+            String q = (query != null) ? query.trim() : "";
+
+            if (!src.isEmpty() && !dst.isEmpty()) {
+                flights = flightRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
+                if (flights.isEmpty()) {
+                    flights = flightRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+                }
+            } else if (!q.isEmpty()) {
+                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(q, q, q, q);
+            } else if (!src.isEmpty()) {
+                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(src, src, src, src);
+            } else if (!dst.isEmpty()) {
+                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(dst, dst, dst, dst);
+            } else {
+                flights = flightRepository.findByStatusTrue();
+            }
+
             response.setSuccess(true);
+            response.setMessage(flights.size() + " flights found.");
             response.setData(flights);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -92,6 +112,10 @@ public class FlightService {
             response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    public ResponseEntity<Response> searchFlights(String source, String destination) {
+        return searchFlights(source, destination, null, null);
     }
 
     // Book Flight

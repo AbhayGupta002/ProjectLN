@@ -249,32 +249,34 @@ public class BusService {
     }
 
     public ResponseEntity<Response> searchBus(String source,
-                                              String destination) {
+                                              String destination,
+                                              String date,
+                                              String query) {
 
         Response response = new Response();
 
         try {
+            List<Bus> buses;
+            String src = (source != null) ? source.trim() : "";
+            String dst = (destination != null) ? destination.trim() : "";
+            String q = (query != null) ? query.trim() : "";
 
-            List<Bus> buses = busRepository
-                    .findBySourceIgnoreCaseAndDestinationIgnoreCase(
-                            source,
-                            destination
-                    );
-
-            if (buses.isEmpty()) {
-
-                ErrorDetails error = new ErrorDetails(
-                        HttpStatus.NOT_FOUND,
-                        "No buses found."
-                );
-
-                response.setError(error);
-
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(response);
+            if (!src.isEmpty() && !dst.isEmpty()) {
+                buses = busRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
+                if (buses.isEmpty()) {
+                    buses = busRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+                }
+            } else if (!q.isEmpty()) {
+                buses = busRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrBusNameContainingIgnoreCaseOrOperatorNameContainingIgnoreCaseOrBusNumberContainingIgnoreCase(q, q, q, q, q);
+            } else if (!src.isEmpty()) {
+                buses = busRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrBusNameContainingIgnoreCaseOrOperatorNameContainingIgnoreCaseOrBusNumberContainingIgnoreCase(src, src, src, src, src);
+            } else if (!dst.isEmpty()) {
+                buses = busRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrBusNameContainingIgnoreCaseOrOperatorNameContainingIgnoreCaseOrBusNumberContainingIgnoreCase(dst, dst, dst, dst, dst);
+            } else {
+                buses = busRepository.findByStatusTrue();
             }
 
-            response.setData("Bus list fetched successfully.");
+            response.setMessage(buses.size() + " buses found.");
             response.setData(buses);
 
             return ResponseEntity.ok(response);
@@ -292,6 +294,10 @@ public class BusService {
                     .body(response);
         }
 
+    }
+
+    public ResponseEntity<Response> searchBus(String source, String destination) {
+        return searchBus(source, destination, null, null);
     }
 
     public ResponseEntity<Response> searchByName(String busName) {

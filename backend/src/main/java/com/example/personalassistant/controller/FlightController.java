@@ -21,9 +21,11 @@ public class FlightController {
 
     @GetMapping("/search")
     public ResponseEntity<Response> searchFlights(
-            @RequestParam String source,
-            @RequestParam String destination) {
-        return flightService.searchFlights(source, destination);
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String query) {
+        return flightService.searchFlights(source, destination, date, query);
     }
 
     @PostMapping("/add")

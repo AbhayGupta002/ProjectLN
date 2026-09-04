@@ -79,12 +79,32 @@ public class TrainService {
         }
     }
 
-    // Search Trains
-    public ResponseEntity<Response> searchTrains(String source, String destination) {
+    // Search Trains with Flexible Route, Keyword, and Date support
+    public ResponseEntity<Response> searchTrains(String source, String destination, String date, String query) {
         Response response = new Response();
         try {
-            List<Train> trains = trainRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(source, destination);
+            List<Train> trains;
+            String src = (source != null) ? source.trim() : "";
+            String dst = (destination != null) ? destination.trim() : "";
+            String q = (query != null) ? query.trim() : "";
+
+            if (!src.isEmpty() && !dst.isEmpty()) {
+                trains = trainRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
+                if (trains.isEmpty()) {
+                    trains = trainRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+                }
+            } else if (!q.isEmpty()) {
+                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(q, q, q, q);
+            } else if (!src.isEmpty()) {
+                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(src, src, src, src);
+            } else if (!dst.isEmpty()) {
+                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(dst, dst, dst, dst);
+            } else {
+                trains = trainRepository.findByStatusTrue();
+            }
+
             response.setSuccess(true);
+            response.setMessage(trains.size() + " trains found.");
             response.setData(trains);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -92,6 +112,10 @@ public class TrainService {
             response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    public ResponseEntity<Response> searchTrains(String source, String destination) {
+        return searchTrains(source, destination, null, null);
     }
 
     // Book Train

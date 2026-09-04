@@ -35,6 +35,19 @@ public interface BusRepository extends JpaRepository<Bus, Long> {
             String destination
     );
 
+    List<Bus> findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(
+            String source,
+            String destination
+    );
+
+    List<Bus> findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrBusNameContainingIgnoreCaseOrOperatorNameContainingIgnoreCaseOrBusNumberContainingIgnoreCase(
+            String source,
+            String destination,
+            String busName,
+            String operatorName,
+            String busNumber
+    );
+
     // Active buses
     List<Bus> findByStatusTrue();
 

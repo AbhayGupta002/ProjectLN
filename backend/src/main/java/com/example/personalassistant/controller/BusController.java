@@ -58,10 +58,12 @@ public class BusController {
     // Search By Source & Destination
     @GetMapping("/search")
     public ResponseEntity<Response> searchBus(
-            @RequestParam String source,
-            @RequestParam String destination) {
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String query) {
 
-        return busService.searchBus(source, destination);
+        return busService.searchBus(source, destination, date, query);
     }
 
     // Search By Bus Name

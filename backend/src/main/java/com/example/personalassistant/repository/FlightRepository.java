@@ -8,6 +8,8 @@ import java.util.List;
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Long> {
     List<Flight> findBySourceIgnoreCaseAndDestinationIgnoreCase(String source, String destination);
+    List<Flight> findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(String source, String destination);
+    List<Flight> findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(String source, String destination, String airline, String flightNumber);
     List<Flight> findByStatusTrue();
     boolean existsByFlightNumber(String flightNumber);
 }

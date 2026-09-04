@@ -56,6 +56,9 @@ public class PaymentService {
     @Autowired
     private CabBookingRepository cabBookingRepository;
 
+    @Autowired
+    private PaymentPriceCacheService paymentPriceCacheService;
+
     private RazorpayClient getClient() throws Exception {
         if (razorpayClient != null) {
             return razorpayClient;
@@ -63,10 +66,10 @@ public class PaymentService {
         return new RazorpayClient(apiKey, apiSecret);
     }
 
-    // Authoritative server-side order creation based on booking
+    // Authoritative server-side order creation based on booking with TTL Price Cache
     @Transactional
     public Map<String, Object> createBookingOrder(String bookingType, Long bookingId, String userEmail) throws Exception {
-        double serverAmount = getAuthoritativeAmount(bookingType, bookingId);
+        double serverAmount = paymentPriceCacheService.getAuthoritativePrice(bookingType, bookingId);
 
         // Check if pending order already exists
         Optional<Payment> existingPayment = paymentRepository.findByBookingTypeAndBookingId(bookingType.toUpperCase(), bookingId);
@@ -235,6 +238,18 @@ public class PaymentService {
                 b.setBookingStatus(BookingStatus.CONFIRMED);
                 cabBookingRepository.save(b);
             });
+        }
+    }
+
+    public double updateBookingPrice(String bookingType, Long bookingId, double newPrice) {
+        return paymentPriceCacheService.updateDatabasePriceAndEvict(bookingType, bookingId, newPrice);
+    }
+
+    public void evictPriceCache(String bookingType, Long bookingId) {
+        if (bookingType != null && bookingId != null) {
+            paymentPriceCacheService.evictPrice(bookingType, bookingId);
+        } else {
+            paymentPriceCacheService.clearAll();
         }
     }
 }

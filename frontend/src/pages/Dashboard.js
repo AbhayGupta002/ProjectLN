@@ -21,8 +21,11 @@ import {
   Search,
   MapPin,
   ExternalLink,
-  Receipt
+  Receipt,
+  Calendar,
+  ArrowRightLeft
 } from "lucide-react";
+import { startBookingPayment } from "../payment/RazorpayPayment";
 import { getUserFlightBookings, cancelFlightBooking } from "../api/flightBookingApi";
 import { getUserBusBookings, cancelBusBooking } from "../api/busBookingApi";
 import { getUserTrainBookings, cancelTrainBooking } from "../api/trainBookingApi";
@@ -65,6 +68,8 @@ function Dashboard() {
 
   const [transportSource, setTransportSource] = useState("");
   const [transportDest, setTransportDest] = useState("");
+  const [transportDate, setTransportDate] = useState(new Date().toISOString().split("T")[0]);
+  const [transportQuery, setTransportQuery] = useState("");
   const [flightResults, setFlightResults] = useState([]);
   const [trainResults, setTrainResults] = useState([]);
   const [busResults, setBusResults] = useState([]);
@@ -267,30 +272,39 @@ function Dashboard() {
     }
   };
 
-  const handleSearchTransport = async () => {
+  const handleSearchTransport = async (overrideSrc, overrideDst) => {
     setSearchingTransport(true);
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const s = transportSource.trim();
-      const d = transportDest.trim();
+      const s = (overrideSrc !== undefined ? overrideSrc : transportSource).trim();
+      const d = (overrideDst !== undefined ? overrideDst : transportDest).trim();
+      const dt = transportDate;
+      const q = transportQuery.trim();
+
+      const params = new URLSearchParams();
+      if (s) params.append("source", s);
+      if (d) params.append("destination", d);
+      if (dt) params.append("date", dt);
+      if (q) params.append("query", q);
+
+      const qs = params.toString();
 
       if (searchCategory === "flights") {
-        const url = s && d ? `${API_BASE}/api/flights/search?source=${s}&destination=${d}` : `${API_BASE}/api/flights`;
+        const url = qs ? `${API_BASE}/api/flights/search?${qs}` : `${API_BASE}/api/flights`;
         const res = await axios.get(url, config);
         setFlightResults(res.data?.data || res.data || []);
       } else if (searchCategory === "trains") {
-        const url = s && d ? `${API_BASE}/api/trains/search?source=${s}&destination=${d}` : `${API_BASE}/api/trains`;
+        const url = qs ? `${API_BASE}/api/trains/search?${qs}` : `${API_BASE}/api/trains`;
         const res = await axios.get(url, config);
         setTrainResults(res.data?.data || res.data || []);
       } else if (searchCategory === "buses") {
-        const url = s && d ? `${API_BASE}/api/bus/search?source=${s}&destination=${d}` : `${API_BASE}/api/bus`;
+        const url = qs ? `${API_BASE}/api/bus/search?${qs}` : `${API_BASE}/api/bus`;
         const res = await axios.get(url, config);
         setBusResults(res.data?.data || res.data || []);
       }
     } catch (err) {
       console.error("Transport search error:", err);
-      alert("Search failed. Please check inputs.");
     } finally {
       setSearchingTransport(false);
     }
@@ -313,6 +327,10 @@ function Dashboard() {
 
   /* ------------------- 5. BOOKING SUBMISSIONS ------------------- */
   const openBookingModal = (type, item) => {
+    setBookingFormData((prev) => ({
+      ...prev,
+      journeyDate: transportDate || new Date().toISOString().split("T")[0]
+    }));
     setActiveModal({ type, item });
   };
 
@@ -1137,24 +1155,132 @@ function Dashboard() {
               {/* 2. TRANSPORT SEARCH BAR (FLIGHTS, TRAINS, BUSES) */}
               {searchCategory !== "hotels" && (
                 <>
-                  <div className="dash-search-bar">
-                    <input
-                      type="text"
-                      className="dash-search-input"
-                      placeholder="Origin / From (e.g. Delhi, Mumbai)"
-                      value={transportSource}
-                      onChange={(e) => setTransportSource(e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="dash-search-input"
-                      placeholder="Destination / To (e.g. Goa, Bengaluru)"
-                      value={transportDest}
-                      onChange={(e) => setTransportDest(e.target.value)}
-                    />
-                    <button className="dash-search-btn" onClick={handleSearchTransport} disabled={searchingTransport}>
+                  <div className="dash-search-bar" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+                    {/* Origin / From */}
+                    <div style={{ flex: "1 1 180px", position: "relative", display: "flex", alignItems: "center" }}>
+                      <MapPin size={16} style={{ position: "absolute", left: "12px", color: "var(--accent-cyan, #38bdf8)", pointerEvents: "none" }} />
+                      <input
+                        type="text"
+                        className="dash-search-input"
+                        placeholder="From (e.g. Delhi, Mumbai)"
+                        value={transportSource}
+                        onChange={(e) => setTransportSource(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSearchTransport(); }}
+                        style={{ paddingLeft: "36px", width: "100%" }}
+                      />
+                    </div>
+
+                    {/* Swap Button */}
+                    <button
+                      type="button"
+                      className="category-tab-btn"
+                      onClick={() => {
+                        const tmp = transportSource;
+                        setTransportSource(transportDest);
+                        setTransportDest(tmp);
+                      }}
+                      title="Swap Origin and Destination"
+                      style={{ padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border-glass, rgba(255,255,255,0.15))" }}
+                    >
+                      <ArrowRightLeft size={16} />
+                    </button>
+
+                    {/* Destination / To */}
+                    <div style={{ flex: "1 1 180px", position: "relative", display: "flex", alignItems: "center" }}>
+                      <MapPin size={16} style={{ position: "absolute", left: "12px", color: "var(--accent-cyan, #38bdf8)", pointerEvents: "none" }} />
+                      <input
+                        type="text"
+                        className="dash-search-input"
+                        placeholder="To (e.g. Varanasi, Goa)"
+                        value={transportDest}
+                        onChange={(e) => setTransportDest(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSearchTransport(); }}
+                        style={{ paddingLeft: "36px", width: "100%" }}
+                      />
+                    </div>
+
+                    {/* Date Picker (Journey Date) */}
+                    <div style={{ flex: "1 1 160px", position: "relative", display: "flex", alignItems: "center" }}>
+                      <Calendar size={16} style={{ position: "absolute", left: "12px", color: "var(--accent-cyan, #38bdf8)", pointerEvents: "none" }} />
+                      <input
+                        type="date"
+                        className="dash-search-input"
+                        value={transportDate}
+                        min={new Date().toISOString().split("T")[0]}
+                        onChange={(e) => setTransportDate(e.target.value)}
+                        title="Journey Date"
+                        style={{ paddingLeft: "36px", width: "100%", colorScheme: "dark" }}
+                      />
+                    </div>
+
+                    {/* Optional Keyword Search Box */}
+                    <div style={{ flex: "1 1 180px", position: "relative", display: "flex", alignItems: "center" }}>
+                      <Search size={16} style={{ position: "absolute", left: "12px", color: "var(--text-muted, #94a3b8)", pointerEvents: "none" }} />
+                      <input
+                        type="text"
+                        className="dash-search-input"
+                        placeholder={`Search ${searchCategory} by name/no...`}
+                        value={transportQuery}
+                        onChange={(e) => setTransportQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSearchTransport(); }}
+                        style={{ paddingLeft: "36px", width: "100%" }}
+                      />
+                    </div>
+
+                    {/* Search and Reset Buttons */}
+                    <button className="dash-search-btn" onClick={() => handleSearchTransport()} disabled={searchingTransport}>
                       {searchingTransport ? "Searching..." : `Search ${searchCategory}`}
                     </button>
+                    {(transportSource || transportDest || transportQuery) && (
+                      <button
+                        type="button"
+                        className="category-tab-btn"
+                        onClick={() => {
+                          setTransportSource("");
+                          setTransportDest("");
+                          setTransportQuery("");
+                          handleSearchTransport("", "");
+                        }}
+                        style={{ padding: "10px 14px", fontSize: "0.85rem" }}
+                      >
+                        <X size={15} /> Show All
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Popular Quick Route Chips */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", margin: "10px 0 18px 0" }}>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted, #94a3b8)", fontWeight: 600 }}>Popular Routes:</span>
+                    {[
+                      { src: "New Delhi", dst: "Varanasi", label: "Delhi ➔ Varanasi" },
+                      { src: "New Delhi", dst: "Katra", label: "Delhi ➔ Katra" },
+                      { src: "New Delhi", dst: "Mumbai", label: "Delhi ➔ Mumbai" },
+                      { src: "Mumbai", dst: "Goa", label: "Mumbai ➔ Goa" },
+                      { src: "New Delhi", dst: "Bengaluru", label: "Delhi ➔ Bengaluru" },
+                      { src: "Bengaluru", dst: "Goa", label: "Bengaluru ➔ Goa" }
+                    ].map((rt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setTransportSource(rt.src);
+                          setTransportDest(rt.dst);
+                          handleSearchTransport(rt.src, rt.dst);
+                        }}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.05)",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
+                          borderRadius: "999px",
+                          color: "var(--accent-cyan, #38bdf8)",
+                          padding: "4px 12px",
+                          fontSize: "0.78rem",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {rt.label}
+                      </button>
+                    ))}
                   </div>
 
                   {/* FLIGHT RESULTS */}
@@ -1170,6 +1296,9 @@ function Dashboard() {
                                   <Plane size={12} /> Flight #{flight.flightNumber || flight.id}
                                 </span>
                               </div>
+                              <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "999px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                                ● Active
+                              </span>
                             </div>
 
                             <div className="item-details-list" style={{ marginTop: "12px" }}>
@@ -1182,14 +1311,20 @@ function Dashboard() {
                                 <span>{flight.departureTime || "08:00 AM"} - {flight.arrivalTime || "10:30 AM"}</span>
                               </div>
                               <div className="item-details-row">
-                                <strong>Seats:</strong>
-                                <span>{flight.availableSeats || 24} available</span>
+                                <strong>Class & Seats:</strong>
+                                <span>{flight.flightClass || "Economy"} • {flight.availableSeats || 24} seats available</span>
                               </div>
+                              {flight.amenities && (
+                                <div className="item-details-row" style={{ fontSize: "0.8rem", color: "var(--text-muted, #94a3b8)" }}>
+                                  <strong>Perks:</strong>
+                                  <span>{flight.amenities}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="item-card-actions">
-                            <div className="item-price-tag">₹{flight.price}</div>
+                            <div className="item-price-tag">₹{flight.fare || flight.price || 3500}</div>
                             <button className="item-book-btn" onClick={() => openBookingModal("flight", flight)}>
                               Book Flight
                             </button>
@@ -1198,7 +1333,7 @@ function Dashboard() {
                       ))}
                       {flightResults.length === 0 && (
                         <p style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", color: "var(--text-muted, #94a3b8)" }}>
-                          No flights found for this route.
+                          No flights found for this route or date. Try another city or click a popular route above.
                         </p>
                       )}
                     </div>
@@ -1217,6 +1352,9 @@ function Dashboard() {
                                   <Train size={12} /> Train #{train.trainNumber || train.id}
                                 </span>
                               </div>
+                              <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "999px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                                ● Real-Time Active
+                              </span>
                             </div>
 
                             <div className="item-details-list" style={{ marginTop: "12px" }}>
@@ -1229,14 +1367,20 @@ function Dashboard() {
                                 <span>{train.departureTime || "06:15 AM"} - {train.arrivalTime || "02:45 PM"}</span>
                               </div>
                               <div className="item-details-row">
-                                <strong>Seats Available:</strong>
-                                <span>{train.availableSeats || 50}</span>
+                                <strong>Classes & Seats:</strong>
+                                <span>{train.trainClass || "CC, EC, 1A, 2A, 3A"} • {train.availableSeats || 50} seats</span>
                               </div>
+                              {train.amenities && (
+                                <div className="item-details-row" style={{ fontSize: "0.8rem", color: "var(--text-muted, #94a3b8)" }}>
+                                  <strong>Amenities:</strong>
+                                  <span>{train.amenities}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="item-card-actions">
-                            <div className="item-price-tag">₹{train.price}</div>
+                            <div className="item-price-tag">₹{train.fare || train.price || 1450}</div>
                             <button className="item-book-btn" onClick={() => openBookingModal("train", train)}>
                               Book Ticket
                             </button>
@@ -1245,7 +1389,7 @@ function Dashboard() {
                       ))}
                       {trainResults.length === 0 && (
                         <p style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", color: "var(--text-muted, #94a3b8)" }}>
-                          No trains found for this route.
+                          No trains found for this route or date. Try another station or click a popular route above.
                         </p>
                       )}
                     </div>
@@ -1259,11 +1403,14 @@ function Dashboard() {
                           <div>
                             <div className="item-card-top">
                               <div>
-                                <h4 className="item-title">{bus.operatorName || "Luxury Volvo Bus"}</h4>
+                                <h4 className="item-title">{bus.operatorName || bus.busName || "Luxury Volvo Bus"}</h4>
                                 <span className="item-badge-pill">
                                   <Bus size={12} /> Bus #{bus.busNumber || bus.id}
                                 </span>
                               </div>
+                              <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "999px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                                ● Active
+                              </span>
                             </div>
 
                             <div className="item-details-list" style={{ marginTop: "12px" }}>
@@ -1276,14 +1423,20 @@ function Dashboard() {
                                 <span>{bus.departureTime || "09:30 PM"}</span>
                               </div>
                               <div className="item-details-row">
-                                <strong>Available Seats:</strong>
-                                <span>{bus.availableSeats || 30}</span>
+                                <strong>Type & Seats:</strong>
+                                <span>{bus.busType || "AC Sleeper"} • {bus.availableSeats || 30} seats available</span>
                               </div>
+                              {bus.amenities && (
+                                <div className="item-details-row" style={{ fontSize: "0.8rem", color: "var(--text-muted, #94a3b8)" }}>
+                                  <strong>Features:</strong>
+                                  <span>{bus.amenities}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="item-card-actions">
-                            <div className="item-price-tag">₹{bus.price}</div>
+                            <div className="item-price-tag">₹{bus.fare || bus.price || 850}</div>
                             <button className="item-book-btn" onClick={() => openBookingModal("bus", bus)}>
                               Book Seat
                             </button>
@@ -1292,7 +1445,7 @@ function Dashboard() {
                       ))}
                       {busResults.length === 0 && (
                         <p style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", color: "var(--text-muted, #94a3b8)" }}>
-                          No buses found for this route.
+                          No buses found for this route or date. Try another city or click a popular route above.
                         </p>
                       )}
                     </div>
@@ -1347,6 +1500,28 @@ function Dashboard() {
                       </div>
 
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        {b.bookingStatus !== "CANCELLED" && b.paymentStatus !== "PAID" && (
+                          <button
+                            className="item-book-btn"
+                            style={{ padding: "6px 12px", fontSize: "0.82rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                            onClick={() => {
+                              startBookingPayment({
+                                bookingType: "hotel",
+                                bookingId: b.id,
+                                userEmail: user?.email,
+                                userName: user?.name,
+                                userMobile: user?.mobile,
+                                onSuccess: () => {
+                                  alert("✅ Payment successful! Hotel stay confirmed.");
+                                  loadAllBookings(user.id, user.email, localStorage.getItem("token"));
+                                },
+                                onFailure: (err) => alert("Payment incomplete: " + (err.message || "Failed"))
+                              });
+                            }}
+                          >
+                            <CreditCard size={13} /> Pay via UPI / QR
+                          </button>
+                        )}
                         {b.bookingStatus !== "CANCELLED" && (
                           <button className="booking-cancel-btn" onClick={() => handleCancelHotel(b.id)}>
                             Cancel Stay
@@ -1377,6 +1552,28 @@ function Dashboard() {
                       </div>
 
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        {b.bookingStatus !== "CANCELLED" && b.paymentStatus !== "PAID" && (
+                          <button
+                            className="item-book-btn"
+                            style={{ padding: "6px 12px", fontSize: "0.82rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                            onClick={() => {
+                              startBookingPayment({
+                                bookingType: "flight",
+                                bookingId: b.id,
+                                userEmail: user?.email,
+                                userName: user?.name,
+                                userMobile: user?.mobile,
+                                onSuccess: () => {
+                                  alert("✅ Payment successful! Flight ticket confirmed.");
+                                  loadAllBookings(user.id, user.email, localStorage.getItem("token"));
+                                },
+                                onFailure: (err) => alert("Payment incomplete: " + (err.message || "Failed"))
+                              });
+                            }}
+                          >
+                            <CreditCard size={13} /> Pay via UPI / QR
+                          </button>
+                        )}
                         {b.bookingStatus !== "CANCELLED" && (
                           <button className="booking-cancel-btn" onClick={() => handleCancelFlight(b.id)}>
                             Cancel Flight
@@ -1407,6 +1604,28 @@ function Dashboard() {
                       </div>
 
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        {b.bookingStatus !== "CANCELLED" && b.paymentStatus !== "PAID" && (
+                          <button
+                            className="item-book-btn"
+                            style={{ padding: "6px 12px", fontSize: "0.82rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                            onClick={() => {
+                              startBookingPayment({
+                                bookingType: "train",
+                                bookingId: b.id,
+                                userEmail: user?.email,
+                                userName: user?.name,
+                                userMobile: user?.mobile,
+                                onSuccess: () => {
+                                  alert("✅ Payment successful! Train ticket confirmed.");
+                                  loadAllBookings(user.id, user.email, localStorage.getItem("token"));
+                                },
+                                onFailure: (err) => alert("Payment incomplete: " + (err.message || "Failed"))
+                              });
+                            }}
+                          >
+                            <CreditCard size={13} /> Pay via UPI / QR
+                          </button>
+                        )}
                         {b.bookingStatus !== "CANCELLED" && (
                           <button className="booking-cancel-btn" onClick={() => handleCancelTrain(b.id)}>
                             Cancel Ticket
@@ -1437,6 +1656,28 @@ function Dashboard() {
                       </div>
 
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        {b.bookingStatus !== "CANCELLED" && b.paymentStatus !== "PAID" && (
+                          <button
+                            className="item-book-btn"
+                            style={{ padding: "6px 12px", fontSize: "0.82rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                            onClick={() => {
+                              startBookingPayment({
+                                bookingType: "bus",
+                                bookingId: b.id,
+                                userEmail: user?.email,
+                                userName: user?.name,
+                                userMobile: user?.mobile,
+                                onSuccess: () => {
+                                  alert("✅ Payment successful! Bus ticket confirmed.");
+                                  loadAllBookings(user.id, user.email, localStorage.getItem("token"));
+                                },
+                                onFailure: (err) => alert("Payment incomplete: " + (err.message || "Failed"))
+                              });
+                            }}
+                          >
+                            <CreditCard size={13} /> Pay via UPI / QR
+                          </button>
+                        )}
                         {b.bookingStatus !== "CANCELLED" && (
                           <button className="booking-cancel-btn" onClick={() => handleCancelBus(b.id)}>
                             Cancel Seat
