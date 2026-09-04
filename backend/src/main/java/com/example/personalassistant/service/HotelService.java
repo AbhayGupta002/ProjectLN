@@ -32,6 +32,7 @@ public class HotelService {
     @Autowired
     private HotelLoginRepository hotelLoginRepository;
 
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<Response> registerHotel(HotelDto hotelDto){
         Response response = new Response();
         if (hotelLoginRepository.existsByEmail(hotelDto.getEmail())){ //made changes

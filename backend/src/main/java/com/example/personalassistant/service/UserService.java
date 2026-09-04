@@ -46,6 +46,7 @@ public class UserService {
     @Autowired
     private OtpService otpService;
 
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<Response> registerUser(UserDto dto) {
 
         Response response = new Response();
@@ -134,7 +135,7 @@ public class UserService {
             int attempts = user.getFailedLoginAttempts() + 1;
             user.setFailedLoginAttempts(attempts);
 
-            if (attempts >= 4) {
+            if (attempts >= 4 ) {
                 user.setAccountLocked(true);
                 userLoginRepository.save(user);
                 ErrorDetails error = new ErrorDetails(
@@ -155,9 +156,11 @@ public class UserService {
             }
         }
 
-        // Password matches -> reset attempts
-        user.setFailedLoginAttempts(0);
-        userLoginRepository.save(user);
+        // Password matches -> reset attempts only if there were prior failed attempts
+        if (user.getFailedLoginAttempts() > 0) {
+            user.setFailedLoginAttempts(0);
+            userLoginRepository.save(user);
+        }
 
         // 🔐 2FA LOGIN: Send OTP if enabled
         if (user.isTwoFactorEnabled()) {

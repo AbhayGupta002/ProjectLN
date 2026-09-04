@@ -28,16 +28,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        // ADMIN LOGIN
-        AdminLogin admin = adminLoginRepository.findByEmail(email).orElse(null);
-        if (admin != null) {
-            return User.withUsername(admin.getEmail())
-                    .password(admin.getPassword())
-                    .roles("ADMIN")
+        // 1. Regular User Login (Majority of queries resolve immediately on 1st query)
+        UserLogin user = userLoginRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            return User.withUsername(user.getEmail())
+                    .password(user.getPassword())
+                    .roles("USER")
                     .build();
         }
 
-        // HOTEL LOGIN
+        // 2. Hotel Partner Login
         HotelLogin hotel = hotelLoginRepository.findByEmail(email).orElse(null);
         if (hotel != null) {
             return User.withUsername(hotel.getEmail())
@@ -46,12 +46,12 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .build();
         }
 
-        // USER LOGIN
-        UserLogin user = userLoginRepository.findByEmail(email).orElse(null);
-        if (user != null) {
-            return User.withUsername(user.getEmail())
-                    .password(user.getPassword())
-                    .roles("USER")
+        // 3. Admin Login
+        AdminLogin admin = adminLoginRepository.findByEmail(email).orElse(null);
+        if (admin != null) {
+            return User.withUsername(admin.getEmail())
+                    .password(admin.getPassword())
+                    .roles("ADMIN")
                     .build();
         }
 

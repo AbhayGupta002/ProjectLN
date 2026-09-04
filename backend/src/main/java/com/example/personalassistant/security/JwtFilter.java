@@ -54,32 +54,31 @@ public class JwtFilter extends OncePerRequestFilter {
                 boolean valid = jwtUtil.validateToken(token);
                 log.debug("JWT valid: {}", valid);
                 if (valid) {
-                    UserDetails userDetails = null;
-                    try {
-                        userDetails = userDetailsService.loadUserByUsername(username);
-                    } catch (UsernameNotFoundException ex) {
-                        log.debug("UserDetails not found for {} : {}", username, ex.getMessage());
-                    }
-
-                    // build authorities: prefer signed token role claim to enforce cryptographic scope
-                    Collection<? extends GrantedAuthority> authorities = List.of();
                     String role = jwtUtil.extractRole(token);
+                    Collection<? extends GrantedAuthority> authorities = List.of();
+                    UserDetails userDetails = null;
+
                     if (role != null && !role.trim().isEmpty()) {
+                        // High-performance stateless path: role is cryptographically verified in the signed JWT.
+                        // Eliminates 3 sequential remote cloud database queries on every single HTTP request!
                         authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-                    } else if (userDetails != null) {
-                        authorities = userDetails.getAuthorities();
+                    } else {
+                        // Fallback only for legacy tokens lacking explicit role claim
+                        try {
+                            userDetails = userDetailsService.loadUserByUsername(username);
+                            authorities = userDetails.getAuthorities();
+                        } catch (UsernameNotFoundException ex) {
+                            log.debug("UserDetails not found for {} : {}", username, ex.getMessage());
+                        }
                     }
 
-                    // set Authentication if we have any authority or userDetails
-                    if ((userDetails != null || !authorities.isEmpty())) {
+                    if (!authorities.isEmpty() || userDetails != null) {
                         Object principal = userDetails != null ? userDetails : username;
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(principal, null, authorities);
                         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(auth);
                         log.debug("Authentication set for {} with authorities {}", username, authorities);
-                    } else {
-                        log.debug("No authorities found for {}, skipping auth set", username);
                     }
                 }
             }

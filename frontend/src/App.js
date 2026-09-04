@@ -29,6 +29,19 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 function App() {
+  React.useEffect(() => {
+    // Proactively warm up Render backend in the background to eliminate cold starts
+    const apiBase = process.env.REACT_APP_API_URL || "https://world-tour-app-onc4.onrender.com";
+    fetch(`${apiBase}/api/health`, { method: "GET", keepalive: true }).catch(() => {});
+
+    // Periodic heartbeat every 10 minutes while active in browser
+    const heartbeat = setInterval(() => {
+      fetch(`${apiBase}/api/health`, { method: "GET", keepalive: true }).catch(() => {});
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(heartbeat);
+  }, []);
+
   return (
     <Router>
       <Routes>
