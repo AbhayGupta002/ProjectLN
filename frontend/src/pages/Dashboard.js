@@ -764,10 +764,6 @@ function Dashboard() {
           </nav>
 
           <div className="user-sidebar-footer">
-            <button className="sidebar-ai-btn" onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}>
-              <img src="/assets/ai-agent-logo.png" alt="AI Agent" style={{ width: 20, height: 20, borderRadius: "50%", marginRight: 6, objectFit: "cover" }} />
-              <span>AI Trip Agent</span>
-            </button>
             <button className="sidebar-logout-btn" onClick={handleLogout}>
               <LogOut size={16} />
               <span>Log Out</span>
