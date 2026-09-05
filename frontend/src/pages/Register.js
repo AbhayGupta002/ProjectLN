@@ -19,6 +19,7 @@ function Register() {
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [remainingAttempts, setRemainingAttempts] = useState(null);
+  const [devOtp, setDevOtp] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -100,6 +101,10 @@ function Register() {
         return;
       }
 
+      if (res && res.data && res.data.otp) {
+        setDevOtp(res.data.otp);
+      }
+
       setStep(2);
       setResendTimer(60);
       setCanResend(false);
@@ -125,12 +130,15 @@ function Register() {
     setRemainingAttempts(null);
     setLoading(true);
     try {
-      await sendRegistrationOtp({
+      const res = await sendRegistrationOtp({
         name: name.trim(),
         email: email.trim(),
         mobile: mobile.trim(),
         password,
       });
+      if (res && res.data && res.data.otp) {
+        setDevOtp(res.data.otp);
+      }
       setResendTimer(60);
       setCanResend(false);
       setSuccessMsg("A new verification code has been dispatched to your email.");
@@ -383,6 +391,39 @@ function Register() {
                 We sent a 6-digit code to <strong>{email}</strong>
               </div>
             </div>
+
+            {devOtp && (
+              <div style={{
+                margin: "0 0 16px 0",
+                padding: "10px 14px",
+                borderRadius: "10px",
+                background: "rgba(59, 130, 246, 0.12)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+                <span style={{ fontSize: "0.84rem", color: "#93c5fd" }}>
+                  Verification Code: <strong style={{ letterSpacing: "2px", color: "#60a5fa", fontSize: "0.95rem" }}>{devOtp}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setOtp(devOtp)}
+                  style={{
+                    background: "#3b82f6",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "4px 10px",
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  Auto-fill
+                </button>
+              </div>
+            )}
 
             <div className="form-group-item">
               <label className="form-label" htmlFor="otp-input" style={{ textAlign: "center", display: "block" }}>

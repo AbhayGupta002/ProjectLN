@@ -97,10 +97,14 @@ public class UserService {
             }
         }
 
-        otpService.generateAndSendOtp(normalizedEmail);
+        String generatedOtp = otpService.generateAndSendOtp(normalizedEmail);
 
         response.setSuccess(true);
         response.setMessage("Verification OTP sent to " + dto.getEmail());
+        response.setData(java.util.Map.of(
+                "otp", generatedOtp != null ? generatedOtp : "",
+                "email", normalizedEmail
+        ));
         return ResponseEntity.ok(response);
     }
 
