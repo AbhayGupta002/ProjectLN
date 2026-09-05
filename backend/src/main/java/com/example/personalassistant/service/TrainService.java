@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -26,6 +27,9 @@ public class TrainService {
 
     @Autowired
     private TrainBookingRepository trainBookingRepository;
+
+    @Autowired(required = false)
+    private RapidApiService rapidApiService;
 
     // Add Train
     public ResponseEntity<Response> addTrain(TrainDTO dto) {
@@ -79,28 +83,36 @@ public class TrainService {
         }
     }
 
-    // Search Trains with Flexible Route, Keyword, and Date support
+    // Search Trains with RapidAPI Live Integration and Resilient Database Fallback
     public ResponseEntity<Response> searchTrains(String source, String destination, String date, String query) {
         Response response = new Response();
         try {
-            List<Train> trains;
+            List<Train> trains = Collections.emptyList();
             String src = (source != null) ? source.trim() : "";
             String dst = (destination != null) ? destination.trim() : "";
             String q = (query != null) ? query.trim() : "";
 
-            if (!src.isEmpty() && !dst.isEmpty()) {
-                trains = trainRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
-                if (trains.isEmpty()) {
-                    trains = trainRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+            // 1. Try RapidAPI real-time search first if route is provided
+            if (rapidApiService != null && !src.isEmpty() && !dst.isEmpty()) {
+                trains = rapidApiService.searchTrainsFromRapidApi(src, dst, date);
+            }
+
+            // 2. If RapidAPI returned no results or is unconfigured, fallback to local repository
+            if (trains.isEmpty()) {
+                if (!src.isEmpty() && !dst.isEmpty()) {
+                    trains = trainRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
+                    if (trains.isEmpty()) {
+                        trains = trainRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+                    }
+                } else if (!q.isEmpty()) {
+                    trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(q, q, q, q);
+                } else if (!src.isEmpty()) {
+                    trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(src, src, src, src);
+                } else if (!dst.isEmpty()) {
+                    trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(dst, dst, dst, dst);
+                } else {
+                    trains = trainRepository.findByStatusTrue();
                 }
-            } else if (!q.isEmpty()) {
-                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(q, q, q, q);
-            } else if (!src.isEmpty()) {
-                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(src, src, src, src);
-            } else if (!dst.isEmpty()) {
-                trains = trainRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrTrainNameContainingIgnoreCaseOrTrainNumberContainingIgnoreCase(dst, dst, dst, dst);
-            } else {
-                trains = trainRepository.findByStatusTrue();
             }
 
             response.setSuccess(true);

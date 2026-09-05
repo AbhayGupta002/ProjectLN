@@ -72,7 +72,8 @@ public class SecurityConfig {
                                 "/api/auth/verify-2fa",
                                 "/api/admin/login",
                                 "/api/admin/register",
-                                "/api/otp/**"
+                                "/api/otp/**",
+                                "/api/rapidapi/**"
                         )
                         .permitAll()
 

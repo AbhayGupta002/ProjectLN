@@ -8,9 +8,9 @@ export const getAllTrains = async () => {
   return axios.get(`${TRAIN_URL}/all`);
 };
 
-export const searchTrains = async (source, destination) => {
+export const searchTrains = async (source, destination, date, query) => {
   return axios.get(`${TRAIN_URL}/search`, {
-    params: { source, destination }
+    params: { source, destination, date, query }
   });
 };
 

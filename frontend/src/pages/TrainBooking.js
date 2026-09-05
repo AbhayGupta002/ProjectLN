@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { searchTrains, bookTrain, getAllTrains } from "../api/trainBookingApi";
 import { startPayment } from "../payment/RazorpayPayment";
 import HomeNavbar from "../components/HomeNavbar";
-import { Info, Search, MapPin, Calendar, Users, X } from "lucide-react";
+import { Search, MapPin, Calendar, Users, X } from "lucide-react";
 import "../styles/TrainBooking.css";
 
 function TrainBooking() {
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");
+  const [searchDate, setSearchDate] = useState(
+    new Date(Date.now() + 86400000).toISOString().split("T")[0]
+  );
   const [trains, setTrains] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTrain, setSelectedTrain] = useState(null);
@@ -39,15 +42,17 @@ function TrainBooking() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!source || !destination) {
+  const handleSearch = async (e, customSrc, customDst) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const src = customSrc !== undefined ? customSrc : source;
+    const dst = customDst !== undefined ? customDst : destination;
+    if (!src || !dst) {
       alert("Please fill in source and destination");
       return;
     }
     try {
       setLoading(true);
-      const res = await searchTrains(source, destination);
+      const res = await searchTrains(src, dst, searchDate);
       if (res.data && res.data.data) {
         setTrains(res.data.data);
       } else {
@@ -59,6 +64,12 @@ function TrainBooking() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectRoute = (src, dst) => {
+    setSource(src);
+    setDestination(dst);
+    handleSearch(null, src, dst);
   };
 
   const openBookingModal = (train) => {
@@ -123,18 +134,22 @@ function TrainBooking() {
       <HomeNavbar />
       <div className="booking-container">
         <div className="booking-header">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "rgba(56, 189, 248, 0.12)", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: "20px", fontSize: "0.82rem", color: "#0284c7", fontWeight: 700, marginBottom: 12 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", display: "inline-block" }}></span>
+            ⚡ RapidAPI IRCTC Live Engine Enabled
+          </div>
           <h1>IRCTC Train Bookings</h1>
           <p>Book express & superfast train tickets securely with instant confirmation</p>
         </div>
 
         {/* Search Bar Component */}
         <form className="search-card" onSubmit={handleSearch}>
-          <div className="search-grid">
+          <div className="search-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
             <div className="input-group">
               <label><MapPin size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> From Station</label>
               <input
                 type="text"
-                placeholder="Origin Station (e.g. Pune)"
+                placeholder="Origin Station (e.g. Pune / NDLS)"
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 required
@@ -144,14 +159,56 @@ function TrainBooking() {
               <label><MapPin size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> To Station</label>
               <input
                 type="text"
-                placeholder="Destination Station (e.g. Mumbai)"
+                placeholder="Destination Station (e.g. Mumbai / MMCT)"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 required
               />
             </div>
+            <div className="input-group">
+              <label><Calendar size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> Date of Journey</label>
+              <input
+                type="date"
+                min={new Date().toISOString().split("T")[0]}
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+
+          {/* Quick Route Filter Chips */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14, alignItems: "center" }}>
+            <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>Popular Rail Routes:</span>
+            {[
+              ["Delhi", "Varanasi"],
+              ["Delhi", "Mumbai"],
+              ["Mumbai", "Goa"],
+              ["Howrah", "Delhi"],
+              ["Bengaluru", "Chennai"]
+            ].map(([s, d], idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => selectRoute(s, d)}
+                style={{
+                  background: source === s && destination === d ? "#0284c7" : "#f1f5f9",
+                  color: source === s && destination === d ? "#ffffff" : "#334155",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 16,
+                  padding: "4px 10px",
+                  fontSize: "0.78rem",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                  transition: "all 0.2s"
+                }}
+              >
+                {s} ➔ {d}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
             <button className="search-btn" type="submit">
               <Search size={18} /> Search Trains
             </button>

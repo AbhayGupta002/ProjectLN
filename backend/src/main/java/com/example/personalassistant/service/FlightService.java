@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -26,6 +27,9 @@ public class FlightService {
 
     @Autowired
     private FlightBookingRepository flightBookingRepository;
+
+    @Autowired(required = false)
+    private RapidApiService rapidApiService;
 
     // Add Flight
     public ResponseEntity<Response> addFlight(FlightDTO dto) {
@@ -79,28 +83,36 @@ public class FlightService {
         }
     }
 
-    // Search Flights with Flexible Route, Keyword, and Date support
+    // Search Flights with RapidAPI Live Integration and Resilient Database Fallback
     public ResponseEntity<Response> searchFlights(String source, String destination, String date, String query) {
         Response response = new Response();
         try {
-            List<Flight> flights;
+            List<Flight> flights = Collections.emptyList();
             String src = (source != null) ? source.trim() : "";
             String dst = (destination != null) ? destination.trim() : "";
             String q = (query != null) ? query.trim() : "";
 
-            if (!src.isEmpty() && !dst.isEmpty()) {
-                flights = flightRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
-                if (flights.isEmpty()) {
-                    flights = flightRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+            // 1. Try RapidAPI real-time search first if route is provided
+            if (rapidApiService != null && !src.isEmpty() && !dst.isEmpty()) {
+                flights = rapidApiService.searchFlightsFromRapidApi(src, dst, date);
+            }
+
+            // 2. If RapidAPI returned no results or is unconfigured, fallback to local repository
+            if (flights.isEmpty()) {
+                if (!src.isEmpty() && !dst.isEmpty()) {
+                    flights = flightRepository.findBySourceContainingIgnoreCaseAndDestinationContainingIgnoreCase(src, dst);
+                    if (flights.isEmpty()) {
+                        flights = flightRepository.findBySourceIgnoreCaseAndDestinationIgnoreCase(src, dst);
+                    }
+                } else if (!q.isEmpty()) {
+                    flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(q, q, q, q);
+                } else if (!src.isEmpty()) {
+                    flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(src, src, src, src);
+                } else if (!dst.isEmpty()) {
+                    flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(dst, dst, dst, dst);
+                } else {
+                    flights = flightRepository.findByStatusTrue();
                 }
-            } else if (!q.isEmpty()) {
-                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(q, q, q, q);
-            } else if (!src.isEmpty()) {
-                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(src, src, src, src);
-            } else if (!dst.isEmpty()) {
-                flights = flightRepository.findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(dst, dst, dst, dst);
-            } else {
-                flights = flightRepository.findByStatusTrue();
             }
 
             response.setSuccess(true);

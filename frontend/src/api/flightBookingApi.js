@@ -8,10 +8,18 @@ export const getAllFlights = async () => {
   return axios.get(`${FLIGHT_URL}/all`);
 };
 
-export const searchFlights = async (source, destination) => {
+export const searchFlights = async (source, destination, date, query) => {
   return axios.get(`${FLIGHT_URL}/search`, {
-    params: { source, destination }
+    params: { source, destination, date, query }
   });
+};
+
+export const getRapidApiStatus = async () => {
+  return axios.get(`${API_BASE}/api/rapidapi/status`);
+};
+
+export const testRapidApiKey = async (key) => {
+  return axios.post(`${API_BASE}/api/rapidapi/test-key`, { key });
 };
 
 export const bookFlight = async (bookingData) => {

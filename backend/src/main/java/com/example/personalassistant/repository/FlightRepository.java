@@ -4,6 +4,7 @@ import com.example.personalassistant.entity.Flight;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Long> {
@@ -12,4 +13,5 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
     List<Flight> findBySourceContainingIgnoreCaseOrDestinationContainingIgnoreCaseOrAirlineContainingIgnoreCaseOrFlightNumberContainingIgnoreCase(String source, String destination, String airline, String flightNumber);
     List<Flight> findByStatusTrue();
     boolean existsByFlightNumber(String flightNumber);
+    Optional<Flight> findByFlightNumber(String flightNumber);
 }

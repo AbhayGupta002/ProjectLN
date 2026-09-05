@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { searchFlights, bookFlight, getAllFlights } from "../api/flightBookingApi";
 import { startPayment } from "../payment/RazorpayPayment";
 import HomeNavbar from "../components/HomeNavbar";
-import { Plane, Search, MapPin, Calendar, Users, X, Info } from "lucide-react";
+import { Plane, Search, MapPin, Calendar, Users, X } from "lucide-react";
 import "../styles/FlightBooking.css";
 
 function FlightBooking() {
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");
+  const [searchDate, setSearchDate] = useState(
+    new Date(Date.now() + 86400000).toISOString().split("T")[0]
+  );
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(null);
@@ -39,15 +42,17 @@ function FlightBooking() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!source || !destination) {
+  const handleSearch = async (e, customSrc, customDst) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const src = customSrc !== undefined ? customSrc : source;
+    const dst = customDst !== undefined ? customDst : destination;
+    if (!src || !dst) {
       alert("Please fill in source and destination");
       return;
     }
     try {
       setLoading(true);
-      const res = await searchFlights(source, destination);
+      const res = await searchFlights(src, dst, searchDate);
       if (res.data && res.data.data) {
         setFlights(res.data.data);
       } else {
@@ -61,8 +66,13 @@ function FlightBooking() {
     }
   };
 
+  const selectRoute = (src, dst) => {
+    setSource(src);
+    setDestination(dst);
+    handleSearch(null, src, dst);
+  };
+
   const openBookingModal = (flight) => {
-    const userId = localStorage.getItem("userId") || 1;
     if (!localStorage.getItem("token")) {
       alert("Please login first to book flights!");
       window.location.href = "/login";
@@ -124,13 +134,17 @@ function FlightBooking() {
       <HomeNavbar />
       <div className="booking-container">
         <div className="booking-header">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "rgba(56, 189, 248, 0.12)", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: "20px", fontSize: "0.82rem", color: "#0284c7", fontWeight: 700, marginBottom: 12 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", display: "inline-block" }}></span>
+            ⚡ RapidAPI Live Flight Engine Enabled
+          </div>
           <h1>Find Your Perfect Flight</h1>
-          <p>Explore flights across destinations with premium comfort and the best rates</p>
+          <p>Real-time flight schedules, live airline fares, and instant Razorpay UPI bookings</p>
         </div>
 
         {/* Search Bar Component */}
         <form className="search-card" onSubmit={handleSearch}>
-          <div className="search-grid">
+          <div className="search-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
             <div className="input-group">
               <label><MapPin size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> From</label>
               <input
@@ -151,10 +165,51 @@ function FlightBooking() {
                 required
               />
             </div>
+            <div className="input-group">
+              <label><Calendar size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> Date</label>
+              <input
+                type="date"
+                min={new Date().toISOString().split("T")[0]}
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+
+          {/* Quick Route Filter Chips */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14, alignItems: "center" }}>
+            <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>Popular Routes:</span>
+            {[
+              ["Delhi", "Mumbai"],
+              ["Bengaluru", "Goa"],
+              ["Delhi", "Varanasi"],
+              ["Mumbai", "Bengaluru"],
+              ["Delhi", "Dubai"]
+            ].map(([s, d], idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => selectRoute(s, d)}
+                style={{
+                  background: source === s && destination === d ? "#0284c7" : "#f1f5f9",
+                  color: source === s && destination === d ? "#ffffff" : "#334155",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 16,
+                  padding: "4px 10px",
+                  fontSize: "0.76rem",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                {s} ➔ {d}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
             <button className="search-btn" type="submit">
-              <Search size={18} /> Search Flights
+              <Search size={18} /> Search Live Flights
             </button>
           </div>
         </form>
