@@ -31,7 +31,10 @@ public class PasswordResetController {
     public ResponseEntity<?> resetPassword(@RequestBody Map<String,String> body) {
         String token = body.get("token");
         String password = body.get("password");
-        if (token==null||password==null)
+        if (password == null || password.isBlank()) {
+            password = body.get("newPassword");
+        }
+        if (token == null || password == null || token.isBlank() || password.isBlank())
             return ResponseEntity.badRequest().body("token and password required");
         try {
             resetService.resetPassword(token,password);

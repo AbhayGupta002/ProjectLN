@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +20,7 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String mailUsername;
 
+    @Async
     public void sendOtp(String toEmail, String otp) {
         log.info("Sending registration verification OTP to {}: [CODE: {}]", toEmail, otp);
         if (mailSender == null) {
@@ -45,6 +47,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void sendNewPassword(String toEmail, String newPassword) {
         log.info("Sending password reset email to {}", toEmail);
         if (mailSender == null) {

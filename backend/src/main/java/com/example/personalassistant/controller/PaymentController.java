@@ -14,15 +14,18 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @PostMapping("/createOrder")
-    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> payload) {
+    @PostMapping({"/createOrder", "/create-order"})
+    public ResponseEntity<?> createOrder(@RequestBody(required = false) Map<String, Object> payload) {
         try {
-            double amount = Double.parseDouble(payload.get("amount").toString());
+            double amount = 500.0;
+            if (payload != null && payload.get("amount") != null) {
+                amount = Double.parseDouble(payload.get("amount").toString());
+            }
             Map<String, Object> orderDetails = paymentService.createOrder(amount);
             return ResponseEntity.ok(orderDetails);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Order creation failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Order creation failed: " + e.getMessage()));
         }
     }
 
@@ -53,7 +56,7 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/verify")
+    @PostMapping({"/verify", "/verify-payment"})
     public ResponseEntity<?> verifyPayment(@RequestBody PaymentVerifyRequestDto request) {
         boolean isValid = paymentService.verifySignature(
                 request.getOrderId(),

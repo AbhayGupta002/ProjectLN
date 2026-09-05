@@ -13,6 +13,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.example.personalassistant.entity.Cab;
+import com.example.personalassistant.repository.CabRepository;
+
 import java.time.LocalTime;
 import java.util.List;
 
@@ -31,11 +34,15 @@ public class TransportDataInitializer implements CommandLineRunner {
     @Autowired
     private BusRepository busRepository;
 
+    @Autowired
+    private CabRepository cabRepository;
+
     @Override
     public void run(String... args) {
         seedTrains();
         seedFlights();
         seedBuses();
+        seedCabs();
     }
 
     private void seedTrains() {
@@ -132,6 +139,40 @@ public class TransportDataInitializer implements CommandLineRunner {
 
         busRepository.saveAll(buses);
         log.info("✅ Successfully seeded {} intercity buses.", buses.size());
+    }
+
+    private void seedCabs() {
+        if (cabRepository.count() > 0) {
+            log.info("Cabs already seeded ({} records found).", cabRepository.count());
+            return;
+        }
+
+        List<Cab> cabs = List.of(
+                createCab("DL-01-AB-1234", "Rajesh Kumar", "+919876500001", "Maruti Dzire", "SEDAN", "Delhi", 4, 14.0, 150.0),
+                createCab("DL-02-CD-5678", "Amit Sharma", "+919876500002", "Toyota Innova Crysta", "SUV", "Delhi", 6, 22.0, 300.0),
+                createCab("MH-01-EF-9012", "Sunil Patil", "+919876500003", "Honda City", "SEDAN", "Mumbai", 4, 16.0, 200.0),
+                createCab("MH-02-GH-3456", "Vikram More", "+919876500004", "Mahindra XUV700", "SUV", "Mumbai", 6, 24.0, 350.0),
+                createCab("KA-01-IJ-7890", "Ramesh Gowda", "+919876500005", "Hyundai Verna", "SEDAN", "Bengaluru", 4, 15.0, 180.0),
+                createCab("UP-65-KL-2345", "Shivam Tiwari", "+919876500006", "Maruti Ertiga", "SUV", "Varanasi", 6, 18.0, 250.0)
+        );
+
+        cabRepository.saveAll(cabs);
+        log.info("✅ Successfully seeded {} available cabs.", cabs.size());
+    }
+
+    private Cab createCab(String vehicleNum, String driverName, String phone, String model, String type, String city, int capacity, double perKm, double baseFare) {
+        Cab c = new Cab();
+        c.setVehicleNumber(vehicleNum);
+        c.setDriverName(driverName);
+        c.setDriverPhone(phone);
+        c.setCarModel(model);
+        c.setCarType(type);
+        c.setCity(city);
+        c.setCapacity(capacity);
+        c.setPerKmRate(perKm);
+        c.setBaseFare(baseFare);
+        c.setAvailable(true);
+        return c;
     }
 
     private Bus createBus(String name, String number, String operator, String src, String dst, LocalTime dep, LocalTime arr, int total, int avail, double fare, String type, String amenities, String img) {

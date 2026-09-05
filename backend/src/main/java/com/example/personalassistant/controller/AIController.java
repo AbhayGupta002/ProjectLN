@@ -13,8 +13,6 @@ import java.util.Map;
 @RequestMapping("/api/ai")
 public class AIController {
 
-    @Autowired
-    private ChatLogRepository chatLogRepository;
 
     @Autowired
     private AIService aiService;

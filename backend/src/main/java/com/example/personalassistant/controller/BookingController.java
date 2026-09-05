@@ -32,7 +32,7 @@ public class BookingController {
 //        this.jwtUtil = jwtUtil;
 //    }
 
-    @Autowired
+    @Autowired(required = false)
     private StringRedisTemplate redisTemplate;
 
 //    @PostConstruct

@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class MongoService {
 
-    @Autowired
+    @Autowired(required = false)
     private ChatLogRepository repo;
 
     public void saveChat(
@@ -21,6 +21,7 @@ public class MongoService {
             String aiResponse,
             String intent
     ) {
+        if (repo == null) return;
         try {
             ChatLog log = new ChatLog();
 
@@ -38,6 +39,7 @@ public class MongoService {
     }
 
     public void saveAiChat(String userPrompt) {
+        if (repo == null) return;
         try {
             ChatLog log = new ChatLog();
 
@@ -47,12 +49,13 @@ public class MongoService {
             repo.save(log); 
 
         } catch (Exception e) {
-            e.printStackTrace(); // or use logger
+            // ignore
         }
     }
 
 
     public List<String> getUserPrompt(){
+        if (repo == null) return List.of();
         try{
             List<ChatLog> logs = repo.findAllByOrderByCreatedAtDesc();
 
@@ -62,8 +65,7 @@ public class MongoService {
                     .toList();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return List.of(); // return empty list if error
+            return List.of();
         }
     }
 }

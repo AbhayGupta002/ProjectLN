@@ -59,15 +59,47 @@ public class PasswordResetService {
 
     @Transactional
     public void resetPassword(String token, String newPassword) {
-        PasswordResetToken prt = tokenRepo.findByToken(token).orElseThrow(() -> new RuntimeException("Invalid token"));
-        if (prt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            tokenRepo.delete(prt);
-            throw new RuntimeException("Token expired");
+        if (token == null || token.isBlank() || newPassword == null || newPassword.isBlank()) {
+            throw new RuntimeException("token and password required");
         }
-        UserLogin user = prt.getUser();
-        user.setPassword(encoder.encode(newPassword));
-        userLoginRepository.save(user);
-        tokenRepo.delete(prt);
+
+        Optional<PasswordResetToken> prtOpt = tokenRepo.findByToken(token);
+        if (prtOpt.isPresent()) {
+            PasswordResetToken prt = prtOpt.get();
+            if (prt.getExpiryDate().isBefore(LocalDateTime.now())) {
+                tokenRepo.delete(prt);
+                throw new RuntimeException("Token expired");
+            }
+            UserLogin user = prt.getUser();
+            if (user != null) {
+                user.setPassword(encoder.encode(newPassword));
+                user.setAccountLocked(false);
+                user.setFailedLoginAttempts(0);
+                userLoginRepository.save(user);
+            }
+            tokenRepo.delete(prt);
+            return;
+        }
+
+        User user = userRepo.findByResetToken(token);
+        if (user != null) {
+            if (user.getTokenExpiry() != null && user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Token expired");
+            }
+            UserLogin userLogin = userLoginRepository.findByEmail(user.getEmail()).orElse(null);
+            if (userLogin != null) {
+                userLogin.setPassword(encoder.encode(newPassword));
+                userLogin.setAccountLocked(false);
+                userLogin.setFailedLoginAttempts(0);
+                userLoginRepository.save(userLogin);
+            }
+            user.setResetToken(null);
+            user.setTokenExpiry(null);
+            userRepo.save(user);
+            return;
+        }
+
+        throw new RuntimeException("Invalid token");
     }
 
     public boolean validateToken(String token) {

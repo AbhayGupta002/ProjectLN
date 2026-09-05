@@ -50,6 +50,9 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired(required = false)
+    private com.example.personalassistant.repository.PasswordResetTokenRepository passwordResetTokenRepository;
+
     public ResponseEntity<Response> sendRegistrationOtp(UserDto dto) {
         Response response = new Response();
 
@@ -371,10 +374,21 @@ public class UserService {
         userLogin.setFailedLoginAttempts(0);
         userLoginRepository.save(userLogin);
 
+        String resetToken = java.util.UUID.randomUUID().toString();
         if (user != null) {
-            user.setResetToken(null);
-            user.setTokenExpiry(null);
+            user.setResetToken(resetToken);
+            user.setTokenExpiry(LocalDateTime.now().plusHours(1));
             userRepository.save(user);
+        }
+
+        if (passwordResetTokenRepository != null && userLogin != null) {
+            try {
+                com.example.personalassistant.entity.PasswordResetToken prt = new com.example.personalassistant.entity.PasswordResetToken();
+                prt.setToken(resetToken);
+                prt.setExpiryDate(LocalDateTime.now().plusHours(1));
+                prt.setUser(userLogin);
+                passwordResetTokenRepository.save(prt);
+            } catch (Exception ignored) {}
         }
 
         // Send generated password directly to the registered email
@@ -382,35 +396,61 @@ public class UserService {
 
         return ResponseEntity.ok(java.util.Map.of(
                 "success", true,
-                "message", "Password has been sent to your registered email address."
+                "message", "Password has been sent to your registered email address.",
+                "resetToken", resetToken
         ));
     }
 
     public ResponseEntity<?> resetPassword(String token, String newPassword) {
+        if (token == null || token.isBlank() || newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.status(400).body("token and password required");
+        }
+
+        // 1. Check in PasswordResetTokenRepository
+        if (passwordResetTokenRepository != null) {
+            java.util.Optional<com.example.personalassistant.entity.PasswordResetToken> prtOpt = passwordResetTokenRepository.findByToken(token);
+            if (prtOpt.isPresent()) {
+                com.example.personalassistant.entity.PasswordResetToken prt = prtOpt.get();
+                if (prt.getExpiryDate().isBefore(LocalDateTime.now())) {
+                    passwordResetTokenRepository.delete(prt);
+                    return ResponseEntity.status(400).body("Token expired");
+                }
+                UserLogin login = prt.getUser();
+                if (login != null) {
+                    login.setPassword(passwordEncoder.encode(newPassword));
+                    login.setAccountLocked(false);
+                    login.setFailedLoginAttempts(0);
+                    userLoginRepository.save(login);
+                }
+                passwordResetTokenRepository.delete(prt);
+                return ResponseEntity.ok("Password reset successful! Your account is now unlocked.");
+            }
+        }
+
+        // 2. Check in UserRepository (User.resetToken)
         User user = userRepository.findByResetToken(token);
+        if (user != null) {
+            if (user.getTokenExpiry() != null && user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+                return ResponseEntity.status(400).body("Token expired");
+            }
 
-        if (user == null) {
-            return ResponseEntity.status(400).body("Invalid token");
+            // Update password and unlock account in UserLogin
+            UserLogin userLogin = userLoginRepository.findByEmail(user.getEmail()).orElse(null);
+            if (userLogin != null) {
+                userLogin.setPassword(passwordEncoder.encode(newPassword));
+                userLogin.setAccountLocked(false); // UNLOCK
+                userLogin.setFailedLoginAttempts(0); // RESET
+                userLoginRepository.save(userLogin);
+            }
+
+            user.setResetToken(null);
+            user.setTokenExpiry(null);
+            userRepository.save(user);
+
+            return ResponseEntity.ok("Password reset successful! Your account is now unlocked.");
         }
 
-        if (user.getTokenExpiry() != null && user.getTokenExpiry().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(400).body("Token expired");
-        }
-
-        // Update password and unlock account in UserLogin
-        UserLogin userLogin = userLoginRepository.findByEmail(user.getEmail()).orElse(null);
-        if (userLogin != null) {
-            userLogin.setPassword(passwordEncoder.encode(newPassword));
-            userLogin.setAccountLocked(false); // UNLOCK
-            userLogin.setFailedLoginAttempts(0); // RESET
-            userLoginRepository.save(userLogin);
-        }
-
-        user.setResetToken(null);
-        user.setTokenExpiry(null);
-        userRepository.save(user);
-
-        return ResponseEntity.ok("Password reset successful! Your account is now unlocked.");
+        return ResponseEntity.status(400).body("Invalid token");
     }
 
     public ResponseEntity<Response> changePassword(String email, ChangePasswordDto dto) {

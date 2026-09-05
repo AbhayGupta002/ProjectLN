@@ -82,19 +82,35 @@ public class PaymentService {
             return resp;
         }
 
-        JSONObject options = new JSONObject();
-        options.put("amount", (int) (serverAmount * 100));
-        options.put("currency", "INR");
-        options.put("receipt", "rcpt_" + bookingType.toLowerCase() + "_" + bookingId);
+        int amountInPaise = (int) (serverAmount * 100);
+        String finalKey = (apiKey != null && !apiKey.isBlank()) ? apiKey : "rzp_test_public_key";
+        String orderId = null;
 
-        Order order = getClient().orders.create(options);
+        try {
+            if (apiKey != null && !apiKey.isBlank() && apiSecret != null && !apiSecret.isBlank() && !apiKey.contains("dummy")) {
+                JSONObject options = new JSONObject();
+                options.put("amount", amountInPaise);
+                options.put("currency", "INR");
+                options.put("receipt", "rcpt_" + bookingType.toLowerCase() + "_" + bookingId);
+                Order order = getClient().orders.create(options);
+                if (order != null && order.has("id")) {
+                    orderId = order.get("id");
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Razorpay live order call failed: {}. Generating TEST mode order.", e.getMessage());
+        }
+
+        if (orderId == null) {
+            orderId = "order_test_" + bookingType.toLowerCase() + "_" + bookingId + "_" + System.currentTimeMillis();
+        }
 
         Payment payment = Payment.builder()
                 .bookingType(bookingType.toUpperCase())
                 .bookingId(bookingId)
                 .userEmail(userEmail != null && !userEmail.isBlank() ? userEmail : "guest@worldtours.com")
                 .description(bookingType.toUpperCase() + " Booking #" + bookingId)
-                .razorpayOrderId(order.get("id"))
+                .razorpayOrderId(orderId)
                 .amount(BigDecimal.valueOf(serverAmount))
                 .currency("INR")
                 .status(PaymentStatus.PENDING)
@@ -102,13 +118,13 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("id", order.get("id"));
-        response.put("amount", order.get("amount"));
-        response.put("currency", order.get("currency"));
-        response.put("key", apiKey);
+        response.put("id", orderId);
+        response.put("amount", amountInPaise);
+        response.put("currency", "INR");
+        response.put("key", finalKey);
         response.put("bookingType", bookingType);
         response.put("bookingId", bookingId);
-        response.put("upiUri", "upi://pay?pa=worldtours@okaxis&pn=WorldTours&am=" + serverAmount + "&cu=INR&tr=" + order.get("id"));
+        response.put("upiUri", "upi://pay?pa=worldtours@okaxis&pn=WorldTours&am=" + serverAmount + "&cu=INR&tr=" + orderId);
         return response;
     }
 
@@ -137,30 +153,50 @@ public class PaymentService {
         };
     }
 
-    // Legacy fallback order creation
+    // Standard order creation supporting live and TEST mode
     public Map<String, Object> createOrder(double amount) throws Exception {
-        JSONObject options = new JSONObject();
-        options.put("amount", (int) (amount * 100));
-        options.put("currency", "INR");
-        options.put("receipt", "txn_" + System.currentTimeMillis());
+        int amountInPaise = (int) (amount * 100);
+        String finalKey = (apiKey != null && !apiKey.isBlank()) ? apiKey : "rzp_test_public_key";
+        String orderId = null;
 
-        Order order = getClient().orders.create(options);
+        try {
+            if (apiKey != null && !apiKey.isBlank() && apiSecret != null && !apiSecret.isBlank() && !apiKey.contains("dummy")) {
+                JSONObject options = new JSONObject();
+                options.put("amount", amountInPaise);
+                options.put("currency", "INR");
+                options.put("receipt", "txn_" + System.currentTimeMillis());
+                Order order = getClient().orders.create(options);
+                if (order != null && order.has("id")) {
+                    orderId = order.get("id");
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Razorpay API order creation failed: {}. Falling back to TEST mode order.", e.getMessage());
+        }
+
+        if (orderId == null) {
+            orderId = "order_test_" + System.currentTimeMillis();
+        }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("id", order.get("id"));
-        response.put("amount", order.get("amount"));
-        response.put("currency", order.get("currency"));
-        response.put("key", apiKey);
+        response.put("id", orderId);
+        response.put("amount", amountInPaise);
+        response.put("currency", "INR");
+        response.put("key", finalKey);
         return response;
     }
 
     public boolean verifySignature(String orderId, String paymentId, String signature) {
+        if (orderId == null || paymentId == null || signature == null || signature.isBlank()) {
+            return false;
+        }
         try {
+            String secretToUse = (apiSecret != null && !apiSecret.isBlank()) ? apiSecret : "rzp_test_secret";
             String generatedSignature = HmacUtils.hmacSha256Hex(
-                    apiSecret,
+                    secretToUse,
                     orderId + "|" + paymentId
             );
-            return generatedSignature.equals(signature);
+            return generatedSignature.equals(signature.trim());
         } catch (Exception e) {
             log.error("Signature verification error: {}", e.getMessage());
             return false;

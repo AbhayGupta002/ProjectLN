@@ -76,7 +76,11 @@ public class SecurityConfig {
                                 "/api/admin/login",
                                 "/api/admin/register",
                                 "/api/otp/**",
-                                "/api/rapidapi/**"
+                                "/api/rapidapi/**",
+                                "/api/payment/createOrder",
+                                "/api/payment/create-order",
+                                "/api/payment/verify",
+                                "/api/payment/verify-payment"
                         )
                         .permitAll()
 
