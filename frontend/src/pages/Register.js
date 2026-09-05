@@ -18,6 +18,7 @@ function Register() {
   const [otp, setOtp] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -80,6 +81,7 @@ function Register() {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
+    setRemainingAttempts(null);
 
     if (!validateForm()) return;
 
@@ -120,6 +122,7 @@ function Register() {
   const handleResendOtp = async () => {
     if (!canResend || loading) return;
     setErrorMsg("");
+    setRemainingAttempts(null);
     setLoading(true);
     try {
       await sendRegistrationOtp({
@@ -164,7 +167,7 @@ function Register() {
         return;
       }
 
-      // Requirement 2: Show "register successful" message
+      // Requirement: Show "register successful" message
       alert("✅ register successful");
       navigate("/login");
     } catch (err) {
@@ -176,6 +179,21 @@ function Register() {
         err.message ||
         "Invalid or expired verification code.";
       setErrorMsg(backendMessage);
+
+      // Track failed attempt states (3-attempt brute-force protection)
+      if (backendMessage.includes("2 attempt(s) remaining")) {
+        setRemainingAttempts(2);
+      } else if (backendMessage.includes("1 attempt(s) remaining")) {
+        setRemainingAttempts(1);
+      } else if (
+        backendMessage.includes("3/3") ||
+        backendMessage.includes("exceeded") ||
+        backendMessage.includes("invalidated")
+      ) {
+        setRemainingAttempts(0);
+        setCanResend(true);
+        setResendTimer(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -390,6 +408,39 @@ function Register() {
                 required
               />
             </div>
+
+            {/* Brute-Force Protection Attempt Alert */}
+            {remainingAttempts !== null && remainingAttempts > 0 && (
+              <div style={{
+                textAlign: "center",
+                margin: "10px 0",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                background: "rgba(245, 158, 11, 0.12)",
+                border: "1px solid rgba(245, 158, 11, 0.3)",
+                color: "#fbbf24",
+                fontSize: "0.85rem",
+                fontWeight: 600
+              }}>
+                ⚠️ {remainingAttempts} attempt{remainingAttempts > 1 ? "s" : ""} remaining. 3 failed attempts will lock this code.
+              </div>
+            )}
+
+            {remainingAttempts === 0 && (
+              <div style={{
+                textAlign: "center",
+                margin: "10px 0",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                background: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+                color: "#f87171",
+                fontSize: "0.85rem",
+                fontWeight: 700
+              }}>
+                ⛔ Maximum attempts exceeded (3/3). This OTP has been invalidated for security. Please click "Resend OTP" below.
+              </div>
+            )}
 
             <button type="submit" className="auth-btn-primary" disabled={loading} style={{ marginTop: "12px" }}>
               {loading ? "Verifying..." : "Verify & Complete Registration"}

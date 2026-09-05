@@ -12,13 +12,19 @@ public class PasswordResetController {
     @Autowired
     private PasswordResetService resetService;
 
+    @Autowired
+    private com.example.personalassistant.service.UserService userService;
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String,String> body) {
         String identifier = body.get("identifier");
-        if (identifier == null || identifier.isBlank())
-            return ResponseEntity.badRequest().body("identifier required");
-            resetService.requestPasswordResetByEmailOrMobile(identifier);
-            return ResponseEntity.ok("If an account exists, a reset link was sent.");
+        if (identifier == null || identifier.isBlank()) {
+            identifier = body.get("email");
+        }
+        if (identifier == null || identifier.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Incorrect Details"));
+        }
+        return userService.forgotPassword(identifier);
     }
 
     @PostMapping("/reset-password")

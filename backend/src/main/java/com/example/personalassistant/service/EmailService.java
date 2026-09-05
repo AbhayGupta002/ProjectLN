@@ -3,6 +3,7 @@ package com.example.personalassistant.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,9 @@ public class EmailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
     public void sendOtp(String toEmail, String otp) {
         log.info("Sending registration verification OTP to {}: [CODE: {}]", toEmail, otp);
         if (mailSender == null) {
@@ -24,6 +28,11 @@ public class EmailService {
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            if (mailUsername != null && !mailUsername.isBlank()) {
+                message.setFrom(mailUsername);
+            } else {
+                message.setFrom("support@worldtours.com");
+            }
             message.setTo(toEmail);
             message.setSubject("Your WorldTours Verification Code");
             message.setText("Welcome to WorldTours!\n\nYour 6-digit registration verification code is: " + otp
@@ -45,6 +54,11 @@ public class EmailService {
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            if (mailUsername != null && !mailUsername.isBlank()) {
+                message.setFrom(mailUsername);
+            } else {
+                message.setFrom("support@worldtours.com");
+            }
             message.setTo(toEmail);
             message.setSubject("Your New Password - WorldTours Account");
             message.setText("Hello,\n\nWe received a password reset request for your WorldTours account."

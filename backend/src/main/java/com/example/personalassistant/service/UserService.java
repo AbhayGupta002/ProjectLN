@@ -3,6 +3,7 @@ package com.example.personalassistant.service;
 import java.util.UUID;
 import java.time.LocalDateTime;
 
+import com.example.personalassistant.dto.OtpVerificationResult;
 import com.example.personalassistant.entity.OtpVerification;
 import com.example.personalassistant.enums.AccountEnum;
 import com.example.personalassistant.repository.OtpRepository;
@@ -62,7 +63,12 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        if (userLoginRepository.existsByEmail(dto.getEmail())) {
+        String normalizedEmail = dto.getEmail().trim().toLowerCase();
+
+        if (userLoginRepository.existsByEmail(normalizedEmail) ||
+            userLoginRepository.existsByEmail(dto.getEmail().trim()) ||
+            userRepository.existsByEmail(normalizedEmail) ||
+            userRepository.existsByEmail(dto.getEmail().trim())) {
             ErrorDetails error = new ErrorDetails(
                     HttpStatus.BAD_REQUEST,
                     "User already exists try with another email"
@@ -72,7 +78,23 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        otpService.generateAndSendOtp(dto.getEmail());
+        if (dto.getMobile() != null && !dto.getMobile().isBlank()) {
+            String cleanMobile = dto.getMobile().replaceAll("[^0-9]", "");
+            if (cleanMobile.length() >= 10) {
+                String last10 = cleanMobile.substring(cleanMobile.length() - 10);
+                if (userRepository.findByMobile(last10).isPresent()) {
+                    ErrorDetails error = new ErrorDetails(
+                            HttpStatus.BAD_REQUEST,
+                            "Mobile number is already registered with another account."
+                    );
+                    response.setError(error);
+                    response.setMessage("Mobile number is already registered with another account.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            }
+        }
+
+        otpService.generateAndSendOtp(normalizedEmail);
 
         response.setSuccess(true);
         response.setMessage("Verification OTP sent to " + dto.getEmail());
@@ -81,7 +103,6 @@ public class UserService {
 
     @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<Response> registerUser(UserDto dto) {
-
         Response response = new Response();
 
         if (dto.getEmail() == null || !dto.getEmail().toLowerCase().endsWith("@gmail.com")) {
@@ -94,7 +115,12 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        if (userLoginRepository.existsByEmail(dto.getEmail())) {
+        String normalizedEmail = dto.getEmail().trim().toLowerCase();
+
+        if (userLoginRepository.existsByEmail(normalizedEmail) ||
+            userLoginRepository.existsByEmail(dto.getEmail().trim()) ||
+            userRepository.existsByEmail(normalizedEmail) ||
+            userRepository.existsByEmail(dto.getEmail().trim())) {
             ErrorDetails error = new ErrorDetails(
                     HttpStatus.BAD_REQUEST,
                     "User already exists try with another email"
@@ -104,34 +130,74 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        // Verify registration OTP
-        if (dto.getOtp() != null && !dto.getOtp().isBlank()) {
-            boolean otpValid = otpService.verifyOtp(dto.getEmail(), dto.getOtp());
-            if (!otpValid) {
-                ErrorDetails error = new ErrorDetails(
-                        HttpStatus.BAD_REQUEST,
-                        "Invalid or expired verification code."
-                );
-                response.setError(error);
-                response.setMessage("Invalid or expired verification code.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        if (dto.getMobile() != null && !dto.getMobile().isBlank()) {
+            String cleanMobile = dto.getMobile().replaceAll("[^0-9]", "");
+            if (cleanMobile.length() >= 10) {
+                String last10 = cleanMobile.substring(cleanMobile.length() - 10);
+                if (userRepository.findByMobile(last10).isPresent()) {
+                    ErrorDetails error = new ErrorDetails(
+                            HttpStatus.BAD_REQUEST,
+                            "Mobile number is already registered with another account."
+                    );
+                    response.setError(error);
+                    response.setMessage("Mobile number is already registered with another account.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
             }
         }
 
+        // Enforce OTP verification requirement
+        if (dto.getOtp() == null || dto.getOtp().trim().isBlank()) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.BAD_REQUEST,
+                    "Verification OTP code is required to complete registration."
+            );
+            response.setError(error);
+            response.setMessage("Verification OTP code is required to complete registration.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Verify registration OTP with 3-attempt brute force check
+        OtpVerificationResult otpResult = otpService.verifyOtpWithResult(normalizedEmail, dto.getOtp().trim());
+        if (!otpResult.isSuccess()) {
+            ErrorDetails error = new ErrorDetails(
+                    HttpStatus.BAD_REQUEST,
+                    otpResult.getMessage()
+            );
+            response.setError(error);
+            response.setMessage(otpResult.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Clean mobile number
+        String userMobile = dto.getMobile() != null ? dto.getMobile().replaceAll("[^0-9]", "") : "";
+        if (userMobile.length() > 10) {
+            userMobile = userMobile.substring(userMobile.length() - 10);
+        }
+
+        // Save User Entity
         User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setMobile(dto.getMobile());
+        user.setName(dto.getName() != null ? dto.getName().trim() : "Traveler");
+        user.setEmail(normalizedEmail);
+        user.setMobile(userMobile.isBlank() ? dto.getMobile() : userMobile);
         user.setAccountEnum(AccountEnum.ACTIVE);
         User savedUser = userRepository.save(user);
 
+        // Save Credentials Entity
         UserLogin login = new UserLogin();
-        login.setEmail(dto.getEmail());
+        login.setEmail(normalizedEmail);
         login.setPassword(passwordEncoder.encode(dto.getPassword()));
         login.setEmailVerified(true);
         login.setTwoFactorEnabled(false);
-
+        login.setAccountLocked(false);
+        login.setFailedLoginAttempts(0);
         userLoginRepository.save(login);
+
+        // Delete used OTP
+        try {
+            otpRepository.deleteByEmail(normalizedEmail);
+            otpRepository.deleteByEmail(dto.getEmail().trim());
+        } catch (Exception ignored) {}
 
         response.setSuccess(true);
         response.setData(savedUser);
@@ -257,10 +323,27 @@ public class UserService {
         }
 
         String targetEmail = email.trim();
-        UserLogin userLogin = userLoginRepository.findByEmail(targetEmail).orElse(null);
-        User user = userRepository.findByEmail(targetEmail).orElse(null);
+        String normalizedEmail = targetEmail.toLowerCase();
 
-        if (userLogin == null || user == null) {
+        UserLogin userLogin = userLoginRepository.findByEmail(targetEmail)
+                .or(() -> userLoginRepository.findByEmail(normalizedEmail))
+                .orElse(null);
+        User user = userRepository.findByEmail(targetEmail)
+                .or(() -> userRepository.findByEmail(normalizedEmail))
+                .orElse(null);
+
+        // If not found by email and input is a 10-digit mobile number, attempt lookup by mobile
+        if (user == null && targetEmail.matches("^[0-9]{10}$")) {
+            user = userRepository.findByMobile(targetEmail).orElse(null);
+            if (user != null && user.getEmail() != null) {
+                final String foundEmail = user.getEmail();
+                userLogin = userLoginRepository.findByEmail(foundEmail)
+                        .or(() -> userLoginRepository.findByEmail(foundEmail.toLowerCase()))
+                        .orElse(null);
+            }
+        }
+
+        if (userLogin == null && user == null) {
             // Requirement 1: If not registered, return "Incorrect Details"
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", "Incorrect Details"));
         }
@@ -274,13 +357,28 @@ public class UserService {
         }
         String newPassword = sb.toString();
 
+        String destinationEmail = userLogin != null ? userLogin.getEmail() : user.getEmail();
+
+        if (userLogin == null) {
+            userLogin = new UserLogin();
+            userLogin.setEmail(destinationEmail);
+            userLogin.setEmailVerified(true);
+            userLogin.setTwoFactorEnabled(false);
+        }
+
         userLogin.setPassword(passwordEncoder.encode(newPassword));
         userLogin.setAccountLocked(false);
         userLogin.setFailedLoginAttempts(0);
         userLoginRepository.save(userLogin);
 
+        if (user != null) {
+            user.setResetToken(null);
+            user.setTokenExpiry(null);
+            userRepository.save(user);
+        }
+
         // Send generated password directly to the registered email
-        emailService.sendNewPassword(targetEmail, newPassword);
+        emailService.sendNewPassword(destinationEmail, newPassword);
 
         return ResponseEntity.ok(java.util.Map.of(
                 "success", true,

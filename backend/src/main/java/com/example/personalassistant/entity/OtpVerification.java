@@ -28,4 +28,7 @@ public class OtpVerification {
 
     @Column(name = "verified")
     private boolean verified;
+
+    @Column(name = "failed_attempts")
+    private int failedAttempts = 0;
 }
